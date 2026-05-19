@@ -29,12 +29,24 @@ single-request serving numbers, not blended with multi-user batching results.
 | Framework | Current Status | Main Tested Model | Best Use Right Now |
 | --- | --- | --- | --- |
 | vLLM | Recommended route | `Qwen3.6-27B-AWQ` | Fast single-request serving on dual 22GB 2080 Ti with TP=2, FlashInfer, FlashQLA, AWQ Marlin, and MTP K=3 |
-| llama.cpp | Reliable baseline | Qwen3.6/Qwopus 27B GGUF | Practical single-card baseline and fallback; slower long-prefill than vLLM, but simple and robust |
+| llama.cpp | Reliable baseline | upstream-original Qwen3.6 27B GGUF conversion | Practical single-card baseline and fallback; slower long-prefill than vLLM, but simple and robust |
 | SGLang | Experimental | `Qwen3.6-27B-AWQ` | Compatibility research and patch archive; not ready for production comparison |
 
 FlashQLA is the kernel foundation for the vLLM and SGLang GDN path here. The
 SM70/SM75 backend is maintained separately at
 [weicj/FlashQLA-SM70-SM75](https://github.com/weicj/FlashQLA-SM70-SM75).
+
+## Qwen3.6 27B Artifacts
+
+The tables below only use Qwen3.6 27B-family artifacts. Derivative model lines
+are intentionally excluded from these comparisons.
+
+| Artifact | Route | Size / Quantization | Notes |
+| --- | --- | --- | --- |
+| `QuantTrio-Qwen3.6-27B-AWQ` | vLLM / SGLang | 21.9 GB safetensors, AWQ 4-bit, group size 128, zero point enabled | Includes MTP tensors; vLLM validated with AWQ Marlin |
+| `unsloth/Qwen3.6-27B-GGUF` `Qwen3.6-27B-Q4_K_M.gguf` | llama.cpp baseline | 16.8 GB file, GGUF `Q4_K_M` | Upstream-original Qwen3.6 conversion used for llama.cpp baseline rows |
+| RDson `Qwen3.6-27B-MTP-Q4_K_M.gguf` | llama.cpp integrated MTP | 16.5 GB file, GGUF `Q4_K_M` with integrated MTP tensors | Separate artifact; used only for llama.cpp MTP rows |
+| `dflash-draft-3.6-q8_0.gguf` | llama.cpp-DFlash draft | 1.8 GB GGUF `Q8_0` draft | Matched Qwen3.6 draft, smoke-only in this repo |
 
 ## Mature Framework Comparison
 
@@ -49,17 +61,26 @@ Single-request serving measurements grouped by workload:
 | Framework | Route | Model | Prefill | Decode | E2E | Status |
 | --- | --- | --- | ---: | ---: | ---: | --- |
 | vLLM | TP=2, MTP K=3 | Qwen3.6-27B-AWQ | `1843.7 tok/s` | `79.1 tok/s` | `3.8s` | Best current 27B route |
-| llama.cpp | GGUF baseline | 27B GGUF | `553.4 tok/s` | `23.7 tok/s` | `12.8s` | 27B baseline |
-| llama.cpp | no-DFlash baseline | Qwen3.5 9B Q4_K_M | `2273.2 tok/s` | `65.4 tok/s` | `3.8s` | 9B DFlash baseline |
-| llama.cpp | flat DFlash | Qwen3.5 9B Q4_K_M | `1867.8 tok/s` | `169.3 tok/s` | `3.0s` | Short-output DFlash works |
-| llama.cpp | DFlash + DDTree/Lucebox | Qwen3.5 9B Q4_K_M | `1855.9 tok/s` | `168.0 tok/s` | `n/a` | No gain over flat DFlash here |
+| llama.cpp | upstream-original GGUF baseline | Qwen3.6-27B-Q4_K_M | `553.4 tok/s` | `23.7 tok/s` | `12.8s` | Single-card baseline |
 
 ### PP64K / TG512
 
 | Framework | Route | Model | Prefill | Decode | E2E | Status |
 | --- | --- | --- | ---: | ---: | ---: | --- |
 | vLLM | TP=2, MTP K=3 | Qwen3.6-27B-AWQ | `1294.3 tok/s` | `55.3 tok/s` | `56.8s` | Best current long-context route |
-| llama.cpp | GGUF baseline | 27B GGUF | `383.1 tok/s` | `16.3 tok/s` | `198.6s` | 27B baseline |
+| llama.cpp | upstream-original GGUF baseline | Qwen3.6-27B-Q4_K_M | `383.1 tok/s` | `16.3 tok/s` | `198.6s` | Single-card baseline |
+
+### PP16K / TG4096
+
+This workload records the llama.cpp integrated-MTP GGUF route. It is not mixed
+into the PP4096/TG128 or PP64K/TG512 tables because it used a different prompt
+and generation length.
+
+| Framework | Route | Model | Prefill | Decode | E2E | Status |
+| --- | --- | --- | ---: | ---: | ---: | --- |
+| llama.cpp | baseline, same MTP GGUF artifact | RDson Qwen3.6-27B-MTP-Q4_K_M | `609.4 tok/s` | `18.5 tok/s` | `248.9s` | MTP disabled |
+| llama.cpp | integrated MTP n=2 | RDson Qwen3.6-27B-MTP-Q4_K_M | `501.3 tok/s` | `28.4 tok/s` | `177.0s` | `68.0%` draft acceptance |
+| llama.cpp | integrated MTP n=3 | RDson Qwen3.6-27B-MTP-Q4_K_M | `496.8 tok/s` | `27.7 tok/s` | `181.2s` | `60.7%` draft acceptance |
 
 Interpretation:
 
@@ -80,12 +101,29 @@ a repeatable request stream.
 | Framework | Route | Model | Prefill | Decode | E2E | Notes |
 | --- | --- | --- | ---: | ---: | ---: | --- |
 | vLLM | TP=2, MTP K=3 | Qwen3.6-27B-AWQ | `700.9 tok/s` | `35.2 tok/s` | `167.4s` | Current best validated route |
-| llama.cpp | GGUF baseline | 27B GGUF | `350.3 tok/s` | `21.2 tok/s` | `471.0s` | Earlier same-style run |
-| llama.cpp | GGUF MTP n=2 | 27B GGUF | `297.0 tok/s` | `45.1 tok/s` | `306.0s` | Faster decode, prefill penalty |
+| llama.cpp | baseline, same MTP GGUF artifact | RDson Qwen3.6-27B-MTP-Q4_K_M | `350.3 tok/s` | `21.2 tok/s` | `471.0s` | MTP disabled |
+| llama.cpp | integrated MTP n=2 | RDson Qwen3.6-27B-MTP-Q4_K_M | `297.0 tok/s` | `45.1 tok/s` | `306.0s` | Faster decode, prefill penalty |
+| llama.cpp-DFlash | draft-max 4 smoke | RDson Qwen3.6-27B-MTP-Q4_K_M | `278.4 tok/s` | `24.4 tok/s` | `942.0s` | Not a useful speed path; one invalid request |
 
 Model scores from these runs are treated as sanity checks only. This repository
 is about whether the 2080 Ti serving stack runs fast and correctly; benchmark
 scores mostly reflect the model.
+
+## Qwen3.6 27B DFlash / Lucebox Smoke
+
+DFlash remains a smoke/non-production route for Qwen3.6 27B here. The traditional
+Lucebox DFlash backend is our project work, tracked in
+[Luce-Org/lucebox-hub](https://github.com/Luce-Org/lucebox-hub), with the
+2080 Ti-specific mixed backend and target-split experiments folded into this
+toolbox as notes rather than as mature serving results.
+
+The matched Qwen3.6 GGUF draft is the only DFlash row kept in the README table.
+Cross-generation draft mismatch smokes are not treated as Qwen3.6 27B evidence.
+
+| Backend | Target | Draft | Test | Prefill | Decode | E2E | Status |
+| --- | --- | --- | --- | ---: | ---: | ---: | --- |
+| llama.cpp-DFlash | Qwen3.6-27B-Q4_K_M | Qwen3.6 Q8_0 GGUF draft | code completion | `n/a` | `26.6 tok/s` | `n/a` | Matched draft, but warning-prone |
+| llama.cpp-DFlash | Qwen3.6-27B-Q4_K_M | Qwen3.6 Q8_0 GGUF draft | Chinese chat | `n/a` | `7.4 tok/s` | `n/a` | Not suitable as default chat route |
 
 ## SGLang SM75 Bring-Up
 
