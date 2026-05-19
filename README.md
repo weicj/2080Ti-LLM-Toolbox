@@ -42,21 +42,24 @@ The table below only compares routes with usable performance data. SGLang is
 tracked separately because the current work is still compatibility bring-up, not
 a production-serving result.
 
-Same-class 27B Qwen3.6-family single-request serving measurements:
+Single-request serving measurements grouped by workload:
 
-### 4096 / 128
+### PP4096 / TG128
 
-| Framework | Config | Prefill | Decode | E2E | Status |
-| --- | --- | ---: | ---: | ---: | --- |
-| vLLM | Qwen3.6-27B-AWQ, TP=2, MTP K=3 | `1843.7 tok/s` | `79.1 tok/s` | `3.8s` | Best current route |
-| llama.cpp | 27B GGUF, single 2080 Ti | `553.4 tok/s` | `23.7 tok/s` | `12.8s` | Baseline |
+| Framework | Route | Model | Prefill | Decode | E2E | Status |
+| --- | --- | --- | ---: | ---: | ---: | --- |
+| vLLM | TP=2, MTP K=3 | Qwen3.6-27B-AWQ | `1843.7 tok/s` | `79.1 tok/s` | `3.8s` | Best current 27B route |
+| llama.cpp | GGUF baseline | 27B GGUF | `553.4 tok/s` | `23.7 tok/s` | `12.8s` | 27B baseline |
+| llama.cpp | no-DFlash baseline | Qwen3.5 9B Q4_K_M | `2273.2 tok/s` | `65.4 tok/s` | `3.8s` | 9B DFlash baseline |
+| llama.cpp | flat DFlash | Qwen3.5 9B Q4_K_M | `1867.8 tok/s` | `169.3 tok/s` | `3.0s` | Short-output DFlash works |
+| llama.cpp | DFlash + DDTree/Lucebox | Qwen3.5 9B Q4_K_M | `1855.9 tok/s` | `168.0 tok/s` | `n/a` | No gain over flat DFlash here |
 
-### 64K / 512
+### PP64K / TG512
 
-| Framework | Config | Prefill | Decode | E2E | Status |
-| --- | --- | ---: | ---: | ---: | --- |
-| vLLM | Qwen3.6-27B-AWQ, TP=2, MTP K=3 | `1294.3 tok/s` | `55.3 tok/s` | `56.8s` | Best current long-context route |
-| llama.cpp | 27B GGUF, single 2080 Ti | `383.1 tok/s` | `16.3 tok/s` | `198.6s` | Baseline |
+| Framework | Route | Model | Prefill | Decode | E2E | Status |
+| --- | --- | --- | ---: | ---: | ---: | --- |
+| vLLM | TP=2, MTP K=3 | Qwen3.6-27B-AWQ | `1294.3 tok/s` | `55.3 tok/s` | `56.8s` | Best current long-context route |
+| llama.cpp | GGUF baseline | 27B GGUF | `383.1 tok/s` | `16.3 tok/s` | `198.6s` | 27B baseline |
 
 Interpretation:
 
@@ -74,11 +77,11 @@ concurrent batching. The workload is from
 [Ragent6](https://github.com/weicj/Ragent6), using its 60-case agent benchmark as
 a repeatable request stream.
 
-| Framework | Config | Wall Time | Avg Prefill | Avg Decode | Notes |
-| --- | --- | ---: | ---: | ---: | --- |
-| vLLM | Qwen3.6-27B-AWQ, TP=2, MTP K=3 | `167.4s` | `700.9 tok/s` | `35.2 tok/s` | Current best validated route |
-| llama.cpp | 27B GGUF baseline | `471.0s` | `350.3 tok/s` | `21.2 tok/s` | Earlier same-style run |
-| llama.cpp | 27B GGUF MTP n=2 | `306.0s` | `297.0 tok/s` | `45.1 tok/s` | Faster decode, prefill penalty |
+| Framework | Route | Model | Prefill | Decode | E2E | Notes |
+| --- | --- | --- | ---: | ---: | ---: | --- |
+| vLLM | TP=2, MTP K=3 | Qwen3.6-27B-AWQ | `700.9 tok/s` | `35.2 tok/s` | `167.4s` | Current best validated route |
+| llama.cpp | GGUF baseline | 27B GGUF | `350.3 tok/s` | `21.2 tok/s` | `471.0s` | Earlier same-style run |
+| llama.cpp | GGUF MTP n=2 | 27B GGUF | `297.0 tok/s` | `45.1 tok/s` | `306.0s` | Faster decode, prefill penalty |
 
 Model scores from these runs are treated as sanity checks only. This repository
 is about whether the 2080 Ti serving stack runs fast and correctly; benchmark
