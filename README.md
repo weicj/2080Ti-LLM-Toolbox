@@ -20,42 +20,68 @@ Single-request means one active request at a time. This repository keeps that
 separate from multi-user batching throughput so vLLM, SGLang, and llama.cpp can
 be compared on the same practical serving shape.
 
-## Current Best Route
+## Framework Status
 
-`Qwen3.6-27B-AWQ` on dual RTX 2080 Ti:
+This toolbox is centered on three inference frameworks on RTX 2080 Ti / SM75:
+vLLM, llama.cpp, and SGLang. They are deliberately compared with
+single-request serving numbers, not blended with multi-user batching results.
 
-- Engine: vLLM 0.21
-- GPUs: 2x RTX 2080 Ti 22GB over NVLink, tensor parallel size 2
-- Quantization: AWQ Marlin
-- Attention: FlashInfer full attention
-- GDN prefill: FlashQLA SM70/SM75 legacy backend from
-  [weicj/FlashQLA-SM70-SM75](https://github.com/weicj/FlashQLA-SM70-SM75)
-- Speculative decode: Qwen3.5/3.6 MTP, best current setting `K=3`
-- Status: usable in single-request benchmark runs; best current route
+| Framework | Current Status | Main Tested Model | Best Use Right Now |
+| --- | --- | --- | --- |
+| vLLM | Recommended route | `Qwen3.6-27B-AWQ` | Fast single-request serving on dual 22GB 2080 Ti with TP=2, FlashInfer, FlashQLA, AWQ Marlin, and MTP K=3 |
+| llama.cpp | Reliable baseline | Qwen3.6/Qwopus 27B GGUF | Practical single-card baseline and fallback; slower long-prefill than vLLM, but simple and robust |
+| SGLang | Experimental | `Qwen3.6-27B-AWQ` | Patch archive and compatibility research; smoke-only so far, not a performance route yet |
 
-Measured highlights:
+FlashQLA is the kernel foundation for the vLLM and SGLang GDN path here. The
+SM70/SM75 backend is maintained separately at
+[weicj/FlashQLA-SM70-SM75](https://github.com/weicj/FlashQLA-SM70-SM75).
 
-| Workload | Prefill | Decode | E2E | Notes |
-| --- | ---: | ---: | ---: | --- |
-| 4K / tg128, MTP K=3 | `1843.7 tok/s` | `79.14 tok/s` | `3.839s` | Peak 4K sweep result |
-| 64K / tg512 cap, MTP K=3 | `1294.3 tok/s` | `55.33 tok/s` | `56.768s` | Completion ended at 405 tokens; not strict ignore-eos |
-| 60-request serving run | `700.9 tok/s avg` | `35.2 tok/s avg` | `167.39s wall` | Sequential real requests, not concurrent batching |
+## Single-Request Comparison
 
-See [models/qwen3.6-27b-awq/vllm-mtp-k3.md](models/qwen3.6-27b-awq/vllm-mtp-k3.md).
+Same-class 27B Qwen3.6-family serving measurements:
 
-## Experimental Route
+| Framework | Config | Prompt / Generate | Prefill | Decode | E2E | Status |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| vLLM | Qwen3.6-27B-AWQ, TP=2, MTP K=3 | 4K / 128 | `1843.7 tok/s` | `79.14 tok/s` | `3.839s` | Best current route |
+| vLLM | Qwen3.6-27B-AWQ, TP=2, MTP K=3 | 64K / cap | `1294.3 tok/s` | `55.33 tok/s` | `56.768s` | Best current long-context route |
+| llama.cpp | 27B GGUF, single 2080 Ti | 4114 / 128 | `553.38 tok/s` | `23.74 tok/s` | `12.84s` | Baseline |
+| llama.cpp | 27B GGUF, single 2080 Ti | 64022 / 512 | `383.12 tok/s` | `16.29 tok/s` | `198.63s` | Baseline |
+| SGLang | Qwen3.6-27B-AWQ smoke | 5 / 2 | n/a | n/a | `3.67s` | HTTP 200, bad output, no valid perf yet |
 
-`Qwen3.6-27B-AWQ` on SGLang reached a short `/generate` HTTP 200 on dual
-2080 Ti using SGLang + FlashInfer + our FlashQLA SM70/SM75 legacy backend +
-SM75 fallbacks.
+Interpretation:
 
-This is not production-ready:
+- vLLM is the current lead for the dual-card 22GB setup, especially long-context
+  prefill and MTP-assisted decode.
+- llama.cpp is still the practical baseline and the sanity check for every
+  optimization claim.
+- SGLang has crossed the first execution barrier on SM75, but it still needs
+  correctness and real prefill/decode validation before it can be compared as a
+  serving framework.
 
-- Short smoke returned `prompt_tokens=5`, `completion_tokens=2`, `e2e_latency=3.67s`.
-- Output was `ieee!`, not the expected `OK`.
-- No reliable throughput or quality benchmark has been completed.
+## Sequential 60-Request Serving Run
 
-See [models/qwen3.6-27b-awq/sglang-smoke.md](models/qwen3.6-27b-awq/sglang-smoke.md).
+For agent-style workload testing, this repository uses a 60-request sequential
+run: real requests are sent one after another to the same server. This measures
+single-request serving behavior under repeated use without hiding latency inside
+concurrent batching.
+
+| Framework | Config | Wall Time | Avg Prefill | Avg Decode | Notes |
+| --- | --- | ---: | ---: | ---: | --- |
+| vLLM | Qwen3.6-27B-AWQ, TP=2, MTP K=3 | `167.39s` | `700.9 tok/s` | `35.2 tok/s` | Current best validated route |
+| llama.cpp | 27B GGUF baseline | `471s` | `350.34 tok/s` | `21.15 tok/s` | Earlier same-style run |
+| llama.cpp | 27B GGUF MTP n=2 | `306s` | `297.01 tok/s` | `45.10 tok/s` | Faster decode, prefill penalty |
+| SGLang | Qwen3.6-27B-AWQ | n/a | n/a | n/a | No comparable 60-request run yet |
+
+Model scores from these runs are treated as sanity checks only. This repository
+is about whether the 2080 Ti serving stack runs fast and correctly; benchmark
+scores mostly reflect the model.
+
+See:
+
+- [BENCHMARKS.md](BENCHMARKS.md)
+- [models/qwen3.6-27b-awq/vllm-mtp-k3.md](models/qwen3.6-27b-awq/vllm-mtp-k3.md)
+- [models/qwen3.6-27b-awq/llamacpp-baseline.md](models/qwen3.6-27b-awq/llamacpp-baseline.md)
+- [models/qwen3.6-27b-awq/sglang-smoke.md](models/qwen3.6-27b-awq/sglang-smoke.md)
 
 ## Repository Map
 
