@@ -46,7 +46,6 @@ are intentionally excluded from these comparisons.
 | `QuantTrio-Qwen3.6-27B-AWQ` | vLLM / SGLang | 21.9 GB safetensors, AWQ 4-bit, group size 128, zero point enabled | Includes MTP tensors; vLLM validated with AWQ Marlin |
 | `unsloth/Qwen3.6-27B-GGUF` `Qwen3.6-27B-Q4_K_M.gguf` | llama.cpp baseline | 16.8 GB file, GGUF `Q4_K_M` | Upstream-original Qwen3.6 conversion used for llama.cpp baseline rows |
 | RDson `Qwen3.6-27B-MTP-Q4_K_M.gguf` | llama.cpp integrated MTP | 16.5 GB file, GGUF `Q4_K_M` with integrated MTP tensors | Separate artifact; used only for llama.cpp MTP rows |
-| `dflash-draft-3.6-q8_0.gguf` | llama.cpp-DFlash draft | 1.8 GB GGUF `Q8_0` draft | Matched Qwen3.6 draft, smoke-only in this repo |
 
 ## Mature Framework Comparison
 
@@ -103,27 +102,10 @@ a repeatable request stream.
 | vLLM | TP=2, MTP K=3 | Qwen3.6-27B-AWQ | `700.9 tok/s` | `35.2 tok/s` | `167.4s` | Current best validated route |
 | llama.cpp | baseline, same MTP GGUF artifact | RDson Qwen3.6-27B-MTP-Q4_K_M | `350.3 tok/s` | `21.2 tok/s` | `471.0s` | MTP disabled |
 | llama.cpp | integrated MTP n=2 | RDson Qwen3.6-27B-MTP-Q4_K_M | `297.0 tok/s` | `45.1 tok/s` | `306.0s` | Faster decode, prefill penalty |
-| llama.cpp-DFlash | draft-max 4 smoke | RDson Qwen3.6-27B-MTP-Q4_K_M | `278.4 tok/s` | `24.4 tok/s` | `942.0s` | Not a useful speed path; one invalid request |
 
 Model scores from these runs are treated as sanity checks only. This repository
 is about whether the 2080 Ti serving stack runs fast and correctly; benchmark
 scores mostly reflect the model.
-
-## Qwen3.6 27B DFlash / Lucebox Smoke
-
-DFlash remains a smoke/non-production route for Qwen3.6 27B here. The traditional
-Lucebox DFlash backend is our project work, tracked in
-[Luce-Org/lucebox-hub](https://github.com/Luce-Org/lucebox-hub), with the
-2080 Ti-specific mixed backend and target-split experiments folded into this
-toolbox as notes rather than as mature serving results.
-
-The matched Qwen3.6 GGUF draft is the only DFlash row kept in the README table.
-Cross-generation draft mismatch smokes are not treated as Qwen3.6 27B evidence.
-
-| Backend | Target | Draft | Test | Prefill | Decode | E2E | Status |
-| --- | --- | --- | --- | ---: | ---: | ---: | --- |
-| llama.cpp-DFlash | Qwen3.6-27B-Q4_K_M | Qwen3.6 Q8_0 GGUF draft | code completion | `n/a` | `26.6 tok/s` | `n/a` | Matched draft, but warning-prone |
-| llama.cpp-DFlash | Qwen3.6-27B-Q4_K_M | Qwen3.6 Q8_0 GGUF draft | Chinese chat | `n/a` | `7.4 tok/s` | `n/a` | Not suitable as default chat route |
 
 ## SGLang SM75 Bring-Up
 
