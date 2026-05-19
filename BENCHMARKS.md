@@ -15,26 +15,34 @@ TU102-300A card plus one TU102-300 card.
 
 ## Single-Request Microbenchmarks
 
-| Engine | Config | Prompt / Gen | Prefill | Decode | E2E | Notes |
-| --- | --- | ---: | ---: | ---: | ---: | --- |
-| vLLM | MTP off | 4096 / 128 | `1858.0 tok/s` | `45.4 tok/s` | `5.1s` | Sweep baseline |
-| vLLM | MTP K=1 | 4096 / 128 | `1814.1 tok/s` | `47.1 tok/s` | `5.0s` | Small decode gain |
-| vLLM | MTP K=2 | 4096 / 128 | `1845.9 tok/s` | `63.4 tok/s` | `4.2s` | Good acceptance |
-| vLLM | MTP K=3 | 4096 / 128 | `1843.7 tok/s` | `79.1 tok/s` | `3.8s` | Best current 4K result |
-| vLLM | MTP K=4 | 4096 / 128 | `1856.0 tok/s` | `72.0 tok/s` | `4.0s` | Fourth token acceptance regressed |
-| vLLM | MTP off | 64K / 512 | `1326.0 tok/s` | `36.2 tok/s` | `62.4s` | Sweep baseline |
-| vLLM | MTP K=1 | 64K / 512 | `1301.2 tok/s` | `48.3 tok/s` | `57.8s` | EOS before strict 512 |
-| vLLM | MTP K=2 | 64K / 512 | `1295.4 tok/s` | `53.0 tok/s` | `57.1s` | EOS before strict 512 |
-| vLLM | MTP K=3 | 64K / 512 | `1294.3 tok/s` | `55.3 tok/s` | `56.8s` | Best current 64K result, EOS at 405 tokens |
-| llama.cpp | GGUF single 2080 Ti | 4096 / 128 | `553.4 tok/s` | `23.7 tok/s` | `12.8s` | T1 backend `18101`, `cache_prompt=false` |
-| llama.cpp | GGUF single 2080 Ti | 64K / 512 | `383.1 tok/s` | `16.3 tok/s` | `198.6s` | T1 backend `18101`, `cache_prompt=false` |
+### 4096 / 128
+
+| Engine | Config | Prefill | Decode | E2E | Notes |
+| --- | --- | ---: | ---: | ---: | --- |
+| vLLM | MTP off | `1858.0 tok/s` | `45.4 tok/s` | `5.1s` | Sweep baseline |
+| vLLM | MTP K=1 | `1814.1 tok/s` | `47.1 tok/s` | `5.0s` | Small decode gain |
+| vLLM | MTP K=2 | `1845.9 tok/s` | `63.4 tok/s` | `4.2s` | Good acceptance |
+| vLLM | MTP K=3 | `1843.7 tok/s` | `79.1 tok/s` | `3.8s` | Best current 4K result |
+| vLLM | MTP K=4 | `1856.0 tok/s` | `72.0 tok/s` | `4.0s` | Fourth token acceptance regressed |
+| llama.cpp | GGUF single 2080 Ti | `553.4 tok/s` | `23.7 tok/s` | `12.8s` | T1 backend `18101`, `cache_prompt=false` |
+
+### 64K / 512
+
+| Engine | Config | Prefill | Decode | E2E | Notes |
+| --- | --- | ---: | ---: | ---: | --- |
+| vLLM | MTP off | `1326.0 tok/s` | `36.2 tok/s` | `62.4s` | Sweep baseline |
+| vLLM | MTP K=1 | `1301.2 tok/s` | `48.3 tok/s` | `57.8s` | EOS before strict 512 |
+| vLLM | MTP K=2 | `1295.4 tok/s` | `53.0 tok/s` | `57.1s` | EOS before strict 512 |
+| vLLM | MTP K=3 | `1294.3 tok/s` | `55.3 tok/s` | `56.8s` | Best current 64K result, EOS at 405 tokens |
+| llama.cpp | GGUF single 2080 Ti | `383.1 tok/s` | `16.3 tok/s` | `198.6s` | T1 backend `18101`, `cache_prompt=false` |
 
 ## Sequential 60-Request Serving Run
 
 The Ragent6 run is used here as a realistic sequential serving workload: 60
 agent-style requests issued one after another against the same server. The model
 score is model-specific and is not the point of this toolbox; serving throughput
-is the hardware/runtime signal.
+is the hardware/runtime signal. Ragent6 lives at
+[weicj/Ragent6](https://github.com/weicj/Ragent6).
 
 vLLM MTP K=3, Qwen3.6-27B-AWQ:
 
