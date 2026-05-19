@@ -23,18 +23,19 @@ Streaming concurrency:
 | 2 | PP7600/TG256 total | `929.7 tok/s` | `31.3 tok/s` | `8.2s` |
 | 4 | PP15200/TG512 total | `1318.3 tok/s` | `44.4 tok/s` | `11.5s` |
 
-Ragent6 60-request concurrent run:
+Ragent6 concurrent functional check:
 
-| Concurrency | Prefill | Decode | E2E | Quality |
-| ---: | ---: | ---: | ---: | --- |
-| 1 | `770.5 tok/s` | `39.2 tok/s` | `164.0s` | strict `43/60`, invalid `0` |
-| 2 | `815.1 tok/s` | `40.4 tok/s` | `151.0s` | strict `43/60`, invalid `0` |
-| 4 | `944.2 tok/s` | `48.3 tok/s` | `124.0s` | strict `43/60`, invalid `0` |
+- Ragent6 0.2.2 zh-CN was split into 1, 2, and 4 concurrent shards.
+- All runs completed without GDN errors, tracebacks, or HTTP 500s.
+- Quality stayed unchanged: strict `43/60`, partial weighted `82.5/100`,
+  partial raw `49.93/60`, invalid `0`.
+- These shard runs are not clean throughput benchmarks because the individual
+  cases have uneven runtimes and sharding changes ordering plus load balance.
 
 Interpretation:
 
 The vLLM route is no longer limited to single-request serving. Four concurrent
 Ragent6 shards completed without GDN errors, tracebacks, or HTTP 500s, and model
-quality stayed unchanged. Concurrency improves aggregate throughput, but TTFT
-rises and per-request decode can drop, so these rows should stay separate from
-single-request llama.cpp comparisons.
+quality stayed unchanged. Use the streaming PP3800/TG128 rows for controlled
+multi-request throughput; use the Ragent6 shard run only as functional evidence
+that real agent-style concurrent requests remain stable.

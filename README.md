@@ -130,26 +130,21 @@ attention, AWQ Marlin, and FlashQLA SM70/SM75 legacy GDN prefill.
 | 2 | PP7600/TG256 total | `929.7 tok/s` | `31.3 tok/s` | `8.2s` | Two simultaneous streaming requests |
 | 4 | PP15200/TG512 total | `1318.3 tok/s` | `44.4 tok/s` | `11.5s` | Four simultaneous streaming requests |
 
-### Ragent6 60-Request Concurrent Run
+### Ragent6 Concurrent Functional Check
 
 This uses [Ragent6](https://github.com/weicj/Ragent6) as the request stream,
-split into concurrent shards. Quality was unchanged across 1/2/4 concurrency:
-strict `43/60`, partial weighted `82.5/100`, invalid `0`.
-
-| Concurrency | Route | Prefill | Decode | E2E | Notes |
-| --- | --- | ---: | ---: | ---: | --- |
-| 1 | TP=2, MTP K=3 | `770.5 tok/s` | `39.2 tok/s` | `164.0s` | Max running requests: 1 |
-| 2 | TP=2, MTP K=3 | `815.1 tok/s` | `40.4 tok/s` | `151.0s` | Max running requests: 2 |
-| 4 | TP=2, MTP K=3 | `944.2 tok/s` | `48.3 tok/s` | `124.0s` | Max running requests: 4; about `29.0` cases/min |
+split into concurrent shards. This is a functional validation, not a clean
+throughput benchmark: Ragent6 cases have uneven runtimes, so splitting the suite
+into shards changes ordering and load balance. The useful result is that 1/2/4
+concurrency completed without GDN errors, tracebacks, or HTTP 500s, and quality
+was unchanged: strict `43/60`, partial weighted `82.5/100`, invalid `0`.
 
 Interpretation:
 
 - The new vLLM build is no longer single-request-only for this route.
-- Four concurrent Ragent6 shards completed without GDN errors, tracebacks, or
-  HTTP 500s.
-- Concurrent batching improves aggregate throughput, but TTFT rises and
-  per-request decode can drop. Use the single-request tables for llama.cpp-style
-  latency comparison, and this section for multi-user serving capacity.
+- Use the streaming PP3800/TG128 rows for controlled multi-request throughput.
+- Use the Ragent6 concurrent check only as evidence that real agent-style
+  concurrent requests stay stable and preserve quality.
 
 ## SGLang SM75 Bring-Up
 

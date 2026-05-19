@@ -97,28 +97,25 @@ ragged GDN kernel.
 | 2 | PP7600/TG256 total | `929.7 tok/s` | `31.3 tok/s` | `8.2s` | Two simultaneous streaming requests |
 | 4 | PP15200/TG512 total | `1318.3 tok/s` | `44.4 tok/s` | `11.5s` | Four simultaneous streaming requests; vLLM reported Running 4 reqs |
 
-### Ragent6 60-Request Concurrent Run
+### Ragent6 Concurrent Functional Check
 
 This uses [Ragent6](https://github.com/weicj/Ragent6) 0.2.2 zh-CN as a real
 agent-style request stream. The 60 cases were split into 1, 2, or 4 concurrent
-shards. Quality was unchanged across all three rows: strict `43/60`, partial
-weighted `82.5/100`, partial raw `49.93/60`, invalid `0`.
+shards only to validate stability and quality. This is not a clean throughput
+benchmark: cases have uneven runtimes, and sharding changes ordering plus load
+balance.
 
-| Concurrency | Route | Prefill | Decode | E2E | Notes |
-| --- | --- | ---: | ---: | ---: | --- |
-| 1 | TP=2, MTP K=3 | `770.5 tok/s` | `39.2 tok/s` | `164.0s` | Max running requests: 1; draft acceptance `85.2%` |
-| 2 | TP=2, MTP K=3 | `815.1 tok/s` | `40.4 tok/s` | `151.0s` | Max running requests: 2; draft acceptance `81.4%` |
-| 4 | TP=2, MTP K=3 | `944.2 tok/s` | `48.3 tok/s` | `124.0s` | Max running requests: 4; draft acceptance `81.5%` |
+Result: 1/2/4 concurrency completed without GDN errors, tracebacks, or HTTP
+500s. Quality was unchanged across all three runs: strict `43/60`, partial
+weighted `82.5/100`, partial raw `49.93/60`, invalid `0`.
 
 Interpretation:
 
 - The vLLM route now has validated multi-request serving, not just
   single-request latency numbers.
-- Concurrency 4 improved Ragent6 wall time from the same-day concurrency-1 run
-  `164.0s` to `124.0s`, about `29.0` cases/min.
-- Aggregate throughput improves with batching, but TTFT rises and per-request
-  decode can drop. Keep this table separate from llama.cpp-style single-slot
-  comparisons.
+- Use the streaming PP3800/TG128 table for controlled concurrency throughput.
+- Use the Ragent6 concurrent check only as functional evidence that real
+  agent-style concurrent requests stay stable and preserve quality.
 
 ## Provenance
 

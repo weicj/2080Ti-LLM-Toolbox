@@ -13,8 +13,10 @@ Why:
 - Average prefill/generation throughput in that run was `700.9/35.2 tok/s`.
 - The updated vLLM build has validated `max_num_seqs=4` concurrent serving
   after the FlashQLA legacy GDN multi-prefill fix.
-- A 4-way Ragent6 shard run completed in `124.0s` with unchanged quality:
-  strict `43/60`, partial weighted `82.5/100`, invalid `0`.
+- Ragent6 1/2/4-way concurrent shard runs completed without GDN errors or HTTP
+  500s, with unchanged quality: strict `43/60`, partial weighted `82.5/100`,
+  invalid `0`. These shard runs are functional checks, not throughput
+  benchmarks, because case runtimes are uneven.
 - Model quality was checked only as a sanity signal for the route.
 
 ## Experimental
