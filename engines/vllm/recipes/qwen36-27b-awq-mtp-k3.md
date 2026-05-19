@@ -21,8 +21,8 @@ Observed result:
 
 - 4K/tg128: `1843.7 tok/s` prefill, `79.14 tok/s` decode, `3.839s` e2e.
 - 64K/tg512 cap: `1294.3 tok/s` prefill, `55.33 tok/s` decode, `56.768s` e2e.
-- Ragent6 0.2.2 zh-CN: strict `43/60`, partial weighted `82.5/100`.
+- Sequential 60-request serving run: `167.39s` wall, average prefill
+  `700.9 tok/s`, average generation `35.2 tok/s`.
 
-TODO: export the exact launch script from the miniclaw experiment and remove
+TODO: export the exact launch script from the private lab experiment and remove
 machine-specific paths.
-

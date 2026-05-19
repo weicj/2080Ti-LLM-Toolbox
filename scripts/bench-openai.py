@@ -35,7 +35,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-url", default=os.getenv("OPENAI_BASE_URL", "http://127.0.0.1:8000/v1"))
     parser.add_argument("--api-key", default=os.getenv("OPENAI_API_KEY", "EMPTY"))
-    parser.add_argument("--model", default=os.getenv("CLUB2080TI_MODEL", "model"))
+    parser.add_argument("--model", default=os.getenv("TOOLBOX_2080TI_MODEL", "model"))
     parser.add_argument("--prompt", default="Say OK.")
     parser.add_argument("--max-tokens", type=int, default=128)
     parser.add_argument("--temperature", type=float, default=0.0)
@@ -79,4 +79,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

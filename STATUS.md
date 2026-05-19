@@ -9,9 +9,9 @@ Status: best current route.
 Why:
 
 - Real 4K and 64K throughput numbers exist.
-- Ragent6 0.2.2 zh-CN full 60-case run completed.
-- Quality is usable for the tested score line: strict `43/60`, partial weighted
-  `82.5/100`.
+- A sequential 60-request real serving run completed in `167.39s`.
+- Average prefill/generation throughput in that run was `700.9/35.2 tok/s`.
+- Model quality was checked only as a sanity signal for the route.
 
 ## Experimental
 
@@ -46,4 +46,3 @@ weighted `32.9/100`. vLLM also reported many missing MoE expert weight warnings.
 
 Loads to health in vLLM, then fails on the first 4K prefill because the forced
 Triton attention path needs 96KB shared memory while SM75 exposes 64KB.
-

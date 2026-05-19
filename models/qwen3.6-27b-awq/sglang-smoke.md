@@ -19,7 +19,8 @@ Stack:
 
 - SGLang
 - FlashInfer
-- FlashQLA legacy
+- FlashQLA SM70/SM75 legacy backend from
+  [weicj/FlashQLA-SM70-SM75](https://github.com/weicj/FlashQLA-SM70-SM75)
 - multiple SM75 Triton fallbacks
 - dual RTX 2080 Ti
 
@@ -27,4 +28,3 @@ Known patch categories are tracked in
 [engines/sglang/README.md](../../engines/sglang/README.md).
 
 No valid prefill/decode benchmark exists yet for this route.
-

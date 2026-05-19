@@ -7,13 +7,13 @@ Status: not recommended despite high throughput.
 
 Runtime:
 
-- miniclaw dual RTX 2080 Ti
+- dual modified RTX 2080 Ti 22GB, NVLink
 - TP=2
 - vLLM 0.21
 - AWQ Marlin
 - FP16
 - max model length `65536`
-- FlashQLA legacy GDN prefill
+- FlashQLA SM70/SM75 legacy GDN prefill
 - FlashInfer full attention
 
 Throughput, MTP off:
@@ -33,4 +33,3 @@ Risk:
 vLLM logged many missing MoE expert weight warnings for
 `down_proj.qweight/qzeros/scales`. The quality result suggests these warnings
 were not harmless.
-

@@ -1,9 +1,11 @@
-# miniclaw vLLM Qwen3.6-27B-AWQ MTP K=3 lock
+# dual RTX 2080 Ti vLLM Qwen3.6-27B-AWQ MTP K=3 lock
 
 status = "partial"
-machine = "miniclaw"
-gpu = "2x RTX 2080 Ti"
+machine = "private dual-2080ti lab rig"
+gpu = "2x modified RTX 2080 Ti 22GB"
 compute_capability = "SM75"
+interconnect = "NVLink"
+gpu_stepping = "TU102-300A + TU102-300"
 tensor_parallel_size = 2
 
 engine = "vLLM"
@@ -12,7 +14,8 @@ torch = "2.11.0 cu130"
 flashinfer = "0.6.8"
 quantization = "AWQ Marlin"
 attention = "FlashInfer full attention"
-gdn_prefill_backend = "FlashQLA legacy"
+gdn_prefill_backend = "FlashQLA SM70/SM75 legacy"
+flashqla_repo = "https://github.com/weicj/FlashQLA-SM70-SM75"
 speculative = "MTP K=3"
 
 max_model_len = 65536
@@ -24,4 +27,3 @@ notes = [
   "Exact upstream commit hashes still need export from experiment environment.",
   "64K/tg512 K=3 run ended at 405 tokens due EOS; strict ignore_eos rerun needed."
 ]
-

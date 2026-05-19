@@ -1,6 +1,6 @@
 # Qwen3.6-27B-AWQ
 
-This is the first main target for Club2080Ti.
+This is the first main target for 2080Ti LLM Toolbox.
 
 ## Recommended
 
@@ -13,4 +13,3 @@ This is the first main target for Club2080Ti.
 ## Baseline
 
 - [llama.cpp baseline](llamacpp-baseline.md)
-

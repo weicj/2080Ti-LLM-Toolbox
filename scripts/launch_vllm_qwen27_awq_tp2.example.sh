@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Example only. Replace MODEL with a local path or HF id.
-MODEL="${MODEL:-/data/models/Qwen3.6-27B-AWQ}"
+MODEL="${MODEL:-/path/to/Qwen3.6-27B-AWQ}"
 PORT="${PORT:-8000}"
 
 python -m vllm.entrypoints.openai.api_server \
@@ -17,4 +17,3 @@ python -m vllm.entrypoints.openai.api_server \
   --quantization awq_marlin \
   --additional-config '{"gdn_prefill_backend":"flashqla_legacy"}' \
   --speculative-config '{"method":"mtp","num_speculative_tokens":3}'
-

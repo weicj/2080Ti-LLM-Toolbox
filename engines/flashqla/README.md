@@ -1,12 +1,12 @@
-# FlashQLA
+# FlashQLA SM70/SM75
 
-FlashQLA is a first-class dependency for this toolbox, but it remains a separate
-upstreamable kernel project.
+FlashQLA SM70/SM75 is our separate kernel project and a first-class foundation
+for this toolbox. It is not just a generic external dependency.
 
 Current fork:
 
 ```text
-repo: git@github.com:weicj/FlashQLA-SM70-SM75.git
+repo: https://github.com/weicj/FlashQLA-SM70-SM75
 branch: sm70-sm75-gdn-forward
 known public commit: 3ab27d77d8ca
 ```
@@ -24,4 +24,3 @@ Known local follow-up:
   `linear_num_value_heads=48`.
 - The local FlashQLA working tree may contain newer unpushed experiment edits;
   do not treat this repo's commit pointer as the final patch queue.
-

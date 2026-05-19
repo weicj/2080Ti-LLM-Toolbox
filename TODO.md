@@ -3,7 +3,7 @@
 ## Before Public Release
 
 - Add exact upstream commit hashes for vLLM, SGLang, FlashInfer, FlashQLA, FLA,
-  PyTorch, and CUDA wheels used in the miniclaw experiments.
+  PyTorch, and CUDA wheels used in the private dual-2080ti lab experiments.
 - Export patch queues from the SGLang and vLLM site-package experiments instead
   of relying on memory notes.
 - Add a strict `ignore_eos` 64K/tg512 rerun for vLLM MTP K=3.
@@ -15,8 +15,7 @@
 
 ## Nice To Have
 
-- Add single-2080Ti recipes.
+- Add stock 11GB single-2080Ti recipes.
 - Add 2080 Ti NVLink topology checklist.
 - Add thermal and fan-curve recommendations.
 - Add a matrix for CUDA 12.8, CUDA 13.0, and driver compatibility.
-

@@ -2,7 +2,7 @@
 
 Status: baseline comparison.
 
-Known result on miniclaw T1, single RTX 2080 Ti, backend `18101`,
+Known result on one RTX 2080 Ti 22GB from the same lab rig,
 `cache_prompt=false`:
 
 | Prompt / Generate | Prefill | Decode | E2E |
@@ -15,4 +15,3 @@ Interpretation:
 - llama.cpp decode is strong for a single-card GGUF baseline.
 - vLLM with AWQ + FlashQLA + MTP K=3 is much stronger for the current 64K
   long-prompt route.
-

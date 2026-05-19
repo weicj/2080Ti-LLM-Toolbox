@@ -9,11 +9,12 @@ Current best tested path:
 - Qwen3.6-27B-AWQ
 - AWQ Marlin
 - FlashInfer full attention
-- FlashQLA legacy GDN prefill
+- FlashQLA SM70/SM75 legacy GDN prefill
 - MTP K=3
 
-The useful local patch was to let vLLM select a FlashQLA legacy backend for GDN
-prefill via `--additional-config '{"gdn_prefill_backend":"flashqla_legacy"}'`.
+The useful local patch was to let vLLM select our FlashQLA SM70/SM75 legacy
+backend for GDN prefill via
+`--additional-config '{"gdn_prefill_backend":"flashqla_legacy"}'`.
 The FlashQLA legacy output buffer also had to match `[B,T,Hv,D]` for
 `linear_num_key_heads=16`, `linear_num_value_heads=48`.
 
@@ -25,4 +26,3 @@ See:
 
 - [models/qwen3.6-27b-awq/vllm-mtp-k3.md](../../models/qwen3.6-27b-awq/vllm-mtp-k3.md)
 - [BENCHMARKS.md](../../BENCHMARKS.md)
-

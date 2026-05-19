@@ -25,7 +25,8 @@ Conclusion: GGUF was not serviceable on SM75/NVLink in that test.
 ## Qwen3.6-27B-AWQ
 
 Short `/generate` smoke eventually reached HTTP 200 on temporary port `19182`
-using SGLang + FlashInfer + FlashQLA legacy + SM75 fallbacks:
+using SGLang + FlashInfer + our FlashQLA SM70/SM75 legacy backend + SM75
+fallbacks:
 
 - `prompt_tokens=5`
 - `completion_tokens=2`
@@ -53,4 +54,3 @@ Workaround categories recorded:
 
 TODO: export patch queue from the experiment venv instead of keeping this as a
 memory-derived list.
-
