@@ -59,6 +59,7 @@ Single-request serving measurements grouped by workload:
 
 | Framework | Route | Model | Prefill | Decode | E2E | Status |
 | --- | --- | --- | ---: | ---: | ---: | --- |
+| vLLM | TP=2, MTP off | Qwen3.6-27B-AWQ | `1858.0 tok/s` | `45.4 tok/s` | `5.1s` | Dual-card baseline |
 | vLLM | TP=2, MTP K=3 | Qwen3.6-27B-AWQ | `1843.7 tok/s` | `79.1 tok/s` | `3.8s` | Best current 27B route |
 | llama.cpp | upstream-original GGUF baseline | Qwen3.6-27B-Q4_K_M | `553.4 tok/s` | `23.7 tok/s` | `12.8s` | Single-card baseline |
 
@@ -66,6 +67,7 @@ Single-request serving measurements grouped by workload:
 
 | Framework | Route | Model | Prefill | Decode | E2E | Status |
 | --- | --- | --- | ---: | ---: | ---: | --- |
+| vLLM | TP=2, MTP off | Qwen3.6-27B-AWQ | `1326.0 tok/s` | `36.2 tok/s` | `62.4s` | Dual-card baseline |
 | vLLM | TP=2, MTP K=3 | Qwen3.6-27B-AWQ | `1294.3 tok/s` | `55.3 tok/s` | `56.8s` | Best current long-context route |
 | llama.cpp | upstream-original GGUF baseline | Qwen3.6-27B-Q4_K_M | `383.1 tok/s` | `16.3 tok/s` | `198.6s` | Single-card baseline |
 
@@ -99,6 +101,7 @@ a repeatable request stream.
 
 | Framework | Route | Model | Prefill | Decode | E2E | Notes |
 | --- | --- | --- | ---: | ---: | ---: | --- |
+| vLLM | TP=2, MTP K=2 | Qwen3.6-27B-AWQ | `631.9 tok/s` | `31.3 tok/s` | `190.6s` | Slower than K=3 despite higher acceptance |
 | vLLM | TP=2, MTP K=3 | Qwen3.6-27B-AWQ | `700.9 tok/s` | `35.2 tok/s` | `167.4s` | Current best validated route |
 | llama.cpp | baseline, same MTP GGUF artifact | RDson Qwen3.6-27B-MTP-Q4_K_M | `350.3 tok/s` | `21.2 tok/s` | `471.0s` | MTP disabled |
 | llama.cpp | integrated MTP n=2 | RDson Qwen3.6-27B-MTP-Q4_K_M | `297.0 tok/s` | `45.1 tok/s` | `306.0s` | Faster decode, prefill penalty |
