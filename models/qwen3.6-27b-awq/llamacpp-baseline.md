@@ -5,10 +5,10 @@ Status: baseline comparison.
 Known result on one RTX 2080 Ti 22GB from the same lab rig,
 `cache_prompt=false`:
 
-| Prompt / Generate | Prefill | Decode | E2E |
+| Prompt / Gen | Prefill | Decode | E2E |
 | ---: | ---: | ---: | ---: |
-| 4114 / 128 | `553.4 tok/s` | `23.7 tok/s` | `12.8s` |
-| 64022 / 512 | `383.1 tok/s` | `16.3 tok/s` | `198.6s` |
+| 4096 / 128 | `553.4 tok/s` | `23.7 tok/s` | `12.8s` |
+| 64K / 512 | `383.1 tok/s` | `16.3 tok/s` | `198.6s` |
 
 Interpretation:
 

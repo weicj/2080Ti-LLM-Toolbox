@@ -44,12 +44,12 @@ a production-serving result.
 
 Same-class 27B Qwen3.6-family single-request serving measurements:
 
-| Framework | Config | Prompt / Generate | Prefill | Decode | E2E | Status |
+| Framework | Config | Prompt / Gen | Prefill | Decode | E2E | Status |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
-| vLLM | Qwen3.6-27B-AWQ, TP=2, MTP K=3 | 4K / 128 | `1843.7 tok/s` | `79.1 tok/s` | `3.8s` | Best current route |
-| vLLM | Qwen3.6-27B-AWQ, TP=2, MTP K=3 | 64K / cap | `1294.3 tok/s` | `55.3 tok/s` | `56.8s` | Best current long-context route |
-| llama.cpp | 27B GGUF, single 2080 Ti | 4114 / 128 | `553.4 tok/s` | `23.7 tok/s` | `12.8s` | Baseline |
-| llama.cpp | 27B GGUF, single 2080 Ti | 64022 / 512 | `383.1 tok/s` | `16.3 tok/s` | `198.6s` | Baseline |
+| vLLM | Qwen3.6-27B-AWQ, TP=2, MTP K=3 | 4096 / 128 | `1843.7 tok/s` | `79.1 tok/s` | `3.8s` | Best current route |
+| vLLM | Qwen3.6-27B-AWQ, TP=2, MTP K=3 | 64K / 512 | `1294.3 tok/s` | `55.3 tok/s` | `56.8s` | Best current long-context route |
+| llama.cpp | 27B GGUF, single 2080 Ti | 4096 / 128 | `553.4 tok/s` | `23.7 tok/s` | `12.8s` | Baseline |
+| llama.cpp | 27B GGUF, single 2080 Ti | 64K / 512 | `383.1 tok/s` | `16.3 tok/s` | `198.6s` | Baseline |
 
 Interpretation:
 
