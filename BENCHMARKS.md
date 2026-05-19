@@ -28,7 +28,6 @@ TU102-300A card plus one TU102-300 card.
 | vLLM | MTP K=3 | 64K / cap | `1294.3 tok/s` | `55.33 tok/s` | `56.768s` | Best current 64K result, EOS at 405 tokens |
 | llama.cpp | GGUF single 2080 Ti | 4114 / 128 | `553.38 tok/s` | `23.74 tok/s` | `12.84s` | T1 backend `18101`, `cache_prompt=false` |
 | llama.cpp | GGUF single 2080 Ti | 64022 / 512 | `383.12 tok/s` | `16.29 tok/s` | `198.63s` | T1 backend `18101`, `cache_prompt=false` |
-| SGLang | AWQ smoke | 5 / 2 | n/a | n/a | `3.67s` | HTTP 200 but bad output; not a valid perf row |
 
 ## Sequential 60-Request Serving Run
 
@@ -53,7 +52,10 @@ Comparable earlier llama.cpp 27B runs on the same 60-request style workload:
 - llama.cpp MTP n=2: `306s` wall, PP mean `297.01 tok/s`, TG mean
   `45.10 tok/s`, draft acceptance `80.42%`
 
-No comparable SGLang 60-request run exists yet.
+SGLang is intentionally excluded from these comparison tables until it has a
+valid prefill/decode benchmark and repeated-request run. Current SGLang status
+is documented as compatibility bring-up in
+[models/qwen3.6-27b-awq/sglang-smoke.md](models/qwen3.6-27b-awq/sglang-smoke.md).
 
 ## Other Models
 

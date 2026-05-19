@@ -30,15 +30,19 @@ single-request serving numbers, not blended with multi-user batching results.
 | --- | --- | --- | --- |
 | vLLM | Recommended route | `Qwen3.6-27B-AWQ` | Fast single-request serving on dual 22GB 2080 Ti with TP=2, FlashInfer, FlashQLA, AWQ Marlin, and MTP K=3 |
 | llama.cpp | Reliable baseline | Qwen3.6/Qwopus 27B GGUF | Practical single-card baseline and fallback; slower long-prefill than vLLM, but simple and robust |
-| SGLang | Experimental | `Qwen3.6-27B-AWQ` | Patch archive and compatibility research; smoke-only so far, not a performance route yet |
+| SGLang | Experimental | `Qwen3.6-27B-AWQ` | Compatibility research and patch archive; not ready for production comparison |
 
 FlashQLA is the kernel foundation for the vLLM and SGLang GDN path here. The
 SM70/SM75 backend is maintained separately at
 [weicj/FlashQLA-SM70-SM75](https://github.com/weicj/FlashQLA-SM70-SM75).
 
-## Single-Request Comparison
+## Mature Framework Comparison
 
-Same-class 27B Qwen3.6-family serving measurements:
+The table below only compares routes with usable performance data. SGLang is
+tracked separately because the current work is still compatibility bring-up, not
+a production-serving result.
+
+Same-class 27B Qwen3.6-family single-request serving measurements:
 
 | Framework | Config | Prompt / Generate | Prefill | Decode | E2E | Status |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
@@ -46,7 +50,6 @@ Same-class 27B Qwen3.6-family serving measurements:
 | vLLM | Qwen3.6-27B-AWQ, TP=2, MTP K=3 | 64K / cap | `1294.3 tok/s` | `55.33 tok/s` | `56.768s` | Best current long-context route |
 | llama.cpp | 27B GGUF, single 2080 Ti | 4114 / 128 | `553.38 tok/s` | `23.74 tok/s` | `12.84s` | Baseline |
 | llama.cpp | 27B GGUF, single 2080 Ti | 64022 / 512 | `383.12 tok/s` | `16.29 tok/s` | `198.63s` | Baseline |
-| SGLang | Qwen3.6-27B-AWQ smoke | 5 / 2 | n/a | n/a | `3.67s` | HTTP 200, bad output, no valid perf yet |
 
 Interpretation:
 
@@ -54,9 +57,6 @@ Interpretation:
   prefill and MTP-assisted decode.
 - llama.cpp is still the practical baseline and the sanity check for every
   optimization claim.
-- SGLang has crossed the first execution barrier on SM75, but it still needs
-  correctness and real prefill/decode validation before it can be compared as a
-  serving framework.
 
 ## Sequential 60-Request Serving Run
 
@@ -70,11 +70,42 @@ concurrent batching.
 | vLLM | Qwen3.6-27B-AWQ, TP=2, MTP K=3 | `167.39s` | `700.9 tok/s` | `35.2 tok/s` | Current best validated route |
 | llama.cpp | 27B GGUF baseline | `471s` | `350.34 tok/s` | `21.15 tok/s` | Earlier same-style run |
 | llama.cpp | 27B GGUF MTP n=2 | `306s` | `297.01 tok/s` | `45.10 tok/s` | Faster decode, prefill penalty |
-| SGLang | Qwen3.6-27B-AWQ | n/a | n/a | n/a | No comparable 60-request run yet |
 
 Model scores from these runs are treated as sanity checks only. This repository
 is about whether the 2080 Ti serving stack runs fast and correctly; benchmark
 scores mostly reflect the model.
+
+## SGLang SM75 Bring-Up
+
+SGLang is tracked as a separate experimental effort. It should not be read as a
+peer of the vLLM and llama.cpp rows above yet.
+
+What works now:
+
+- `Qwen3.6-27B-AWQ` reached a short `/generate` HTTP 200 on dual RTX 2080 Ti.
+- The smoke returned `prompt_tokens=5`, `completion_tokens=2`, and
+  `e2e_latency=3.67s`.
+- The runtime path used SGLang + FlashInfer + our FlashQLA SM70/SM75 legacy
+  backend + SM75 fallback patches.
+
+What was patched or worked around:
+
+- `ReqToTokenPool.write` Triton scatter
+- vocab mask and LM head fallback paths
+- mamba prefix handling
+- decode allocations avoiding unsupported `clone`/`to` paths
+- schedule batch add and `clamp_position`
+- FlashInfer decode cumsum
+- hybrid decode arange
+- earlier FLA/GDN allocation and workspace issues
+
+Why it is not production-ready:
+
+- The smoke output was `ieee!`, not the expected `OK`.
+- There is no valid prefill/decode benchmark.
+- There is no 60-request serving run.
+- The patch queue still needs to be exported, cleaned, and reproduced outside
+  the experiment environment.
 
 See:
 
