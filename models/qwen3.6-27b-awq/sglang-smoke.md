@@ -8,7 +8,7 @@ The first successful execution smoke used temporary port `19182` and returned:
 HTTP 200
 prompt_tokens = 5
 completion_tokens = 2
-e2e_latency = 3.67s
+e2e_latency = 3.7s
 output = ieee!
 ```
 

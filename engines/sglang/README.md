@@ -17,7 +17,7 @@ Result:
 
 - TP=2 failed on dense GGUF tensor slicing:
   `start (6144)+length(6144)>dimension(6144)`.
-- TP=1 loaded weights (`mem usage=14.46 GB`, KV `26258` tokens), then failed in
+- TP=1 loaded weights (`mem usage=14.5 GB`, KV `26258` tokens), then failed in
   `sgl_kernel.rmsnorm` with `no kernel image is available`.
 
 Conclusion: GGUF was not serviceable on SM75/NVLink in that test.
@@ -30,7 +30,7 @@ fallbacks:
 
 - `prompt_tokens=5`
 - `completion_tokens=2`
-- `e2e_latency=3.67s`
+- `e2e_latency=3.7s`
 - output: `ieee!`
 
 That proves execution only. It does not validate quality or performance.

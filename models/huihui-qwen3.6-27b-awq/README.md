@@ -15,9 +15,9 @@ Throughput:
 
 | Config | Workload | Prefill | Decode | E2E |
 | --- | --- | ---: | ---: | ---: |
-| MTP off, vLLM AWQ slow path | 4K/tg128 | `1242.7 tok/s` | `5.27 tok/s` | `27.58s` |
-| MTP off, vLLM AWQ slow path | 64K/tg512 | `1243.1 tok/s` | `4.65 tok/s` | `161.60s` |
-| K=1 | 4K/tg128 | `1198.3 tok/s` | `5.13 tok/s` | `28.37s` |
+| MTP off, vLLM AWQ slow path | 4K/tg128 | `1242.7 tok/s` | `5.3 tok/s` | `27.6s` |
+| MTP off, vLLM AWQ slow path | 64K/tg512 | `1243.1 tok/s` | `4.7 tok/s` | `161.6s` |
+| K=1 | 4K/tg128 | `1198.3 tok/s` | `5.1 tok/s` | `28.4s` |
 | K=1 | 64K/tg512 | OOM | OOM | OOM |
 
 Quality:
@@ -27,4 +27,3 @@ Quality:
 
 Conclusion: quality is decent, but decode speed is too slow for this toolbox's
 target use case.
-

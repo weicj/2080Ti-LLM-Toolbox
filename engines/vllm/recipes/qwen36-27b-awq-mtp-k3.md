@@ -19,9 +19,9 @@ cuda_graph_capture_sizes = [4]
 
 Observed result:
 
-- 4K/tg128: `1843.7 tok/s` prefill, `79.14 tok/s` decode, `3.839s` e2e.
-- 64K/tg512 cap: `1294.3 tok/s` prefill, `55.33 tok/s` decode, `56.768s` e2e.
-- Sequential 60-request serving run: `167.39s` wall, average prefill
+- 4K/tg128: `1843.7 tok/s` prefill, `79.1 tok/s` decode, `3.8s` e2e.
+- 64K/tg512 cap: `1294.3 tok/s` prefill, `55.3 tok/s` decode, `56.8s` e2e.
+- Sequential 60-request serving run: `167.4s` wall, average prefill
   `700.9 tok/s`, average generation `35.2 tok/s`.
 
 TODO: export the exact launch script from the private lab experiment and remove

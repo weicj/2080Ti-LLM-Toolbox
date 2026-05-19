@@ -46,10 +46,10 @@ Same-class 27B Qwen3.6-family single-request serving measurements:
 
 | Framework | Config | Prompt / Generate | Prefill | Decode | E2E | Status |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
-| vLLM | Qwen3.6-27B-AWQ, TP=2, MTP K=3 | 4K / 128 | `1843.7 tok/s` | `79.14 tok/s` | `3.839s` | Best current route |
-| vLLM | Qwen3.6-27B-AWQ, TP=2, MTP K=3 | 64K / cap | `1294.3 tok/s` | `55.33 tok/s` | `56.768s` | Best current long-context route |
-| llama.cpp | 27B GGUF, single 2080 Ti | 4114 / 128 | `553.38 tok/s` | `23.74 tok/s` | `12.84s` | Baseline |
-| llama.cpp | 27B GGUF, single 2080 Ti | 64022 / 512 | `383.12 tok/s` | `16.29 tok/s` | `198.63s` | Baseline |
+| vLLM | Qwen3.6-27B-AWQ, TP=2, MTP K=3 | 4K / 128 | `1843.7 tok/s` | `79.1 tok/s` | `3.8s` | Best current route |
+| vLLM | Qwen3.6-27B-AWQ, TP=2, MTP K=3 | 64K / cap | `1294.3 tok/s` | `55.3 tok/s` | `56.8s` | Best current long-context route |
+| llama.cpp | 27B GGUF, single 2080 Ti | 4114 / 128 | `553.4 tok/s` | `23.7 tok/s` | `12.8s` | Baseline |
+| llama.cpp | 27B GGUF, single 2080 Ti | 64022 / 512 | `383.1 tok/s` | `16.3 tok/s` | `198.6s` | Baseline |
 
 Interpretation:
 
@@ -67,9 +67,9 @@ concurrent batching.
 
 | Framework | Config | Wall Time | Avg Prefill | Avg Decode | Notes |
 | --- | --- | ---: | ---: | ---: | --- |
-| vLLM | Qwen3.6-27B-AWQ, TP=2, MTP K=3 | `167.39s` | `700.9 tok/s` | `35.2 tok/s` | Current best validated route |
-| llama.cpp | 27B GGUF baseline | `471s` | `350.34 tok/s` | `21.15 tok/s` | Earlier same-style run |
-| llama.cpp | 27B GGUF MTP n=2 | `306s` | `297.01 tok/s` | `45.10 tok/s` | Faster decode, prefill penalty |
+| vLLM | Qwen3.6-27B-AWQ, TP=2, MTP K=3 | `167.4s` | `700.9 tok/s` | `35.2 tok/s` | Current best validated route |
+| llama.cpp | 27B GGUF baseline | `471.0s` | `350.3 tok/s` | `21.2 tok/s` | Earlier same-style run |
+| llama.cpp | 27B GGUF MTP n=2 | `306.0s` | `297.0 tok/s` | `45.1 tok/s` | Faster decode, prefill penalty |
 
 Model scores from these runs are treated as sanity checks only. This repository
 is about whether the 2080 Ti serving stack runs fast and correctly; benchmark
@@ -84,7 +84,7 @@ What works now:
 
 - `Qwen3.6-27B-AWQ` reached a short `/generate` HTTP 200 on dual RTX 2080 Ti.
 - The smoke returned `prompt_tokens=5`, `completion_tokens=2`, and
-  `e2e_latency=3.67s`.
+  `e2e_latency=3.7s`.
 - The runtime path used SGLang + FlashInfer + our FlashQLA SM70/SM75 legacy
   backend + SM75 fallback patches.
 

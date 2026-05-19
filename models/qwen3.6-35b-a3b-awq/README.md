@@ -20,8 +20,8 @@ Throughput, MTP off:
 
 | Workload | Prefill | Decode | E2E |
 | --- | ---: | ---: | ---: |
-| pp4096/tg128 | `3235.3 tok/s` | `98.4 tok/s` | `2.57s` |
-| pp64K/tg512 | `2748.0 tok/s` | `85.9 tok/s` | `29.25s` |
+| pp4096/tg128 | `3235.3 tok/s` | `98.4 tok/s` | `2.6s` |
+| pp64K/tg512 | `2748.0 tok/s` | `85.9 tok/s` | `29.3s` |
 
 Quality:
 

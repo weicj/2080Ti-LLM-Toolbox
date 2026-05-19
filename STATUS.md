@@ -9,7 +9,7 @@ Status: best current route.
 Why:
 
 - Real 4K and 64K throughput numbers exist.
-- A sequential 60-request real serving run completed in `167.39s`.
+- A sequential 60-request real serving run completed in `167.4s`.
 - Average prefill/generation throughput in that run was `700.9/35.2 tok/s`.
 - Model quality was checked only as a sanity signal for the route.
 
@@ -34,7 +34,7 @@ issues before becoming serviceable.
 ### zhiqing/Huihui-Qwen3.6-27B-abliterated-AWQ
 
 Quality is decent, but vLLM only uses the slow AWQ path for this AutoRound AWQ
-layout. Decode is about `4.65-5.27 tok/s`, which is not acceptable for the
+layout. Decode is about `4.7-5.3 tok/s`, which is not acceptable for the
 target online use case.
 
 ### feanors/Qwen3.6-35B-A3B Claude/Opus distilled AWQ
