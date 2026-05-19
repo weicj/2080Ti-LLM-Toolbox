@@ -1,0 +1,14 @@
+name: pp64k-tg512
+prompt_tokens: 64000
+max_tokens: 512
+temperature: 0
+record:
+  - prompt_tokens
+  - completion_tokens
+  - time_to_first_token
+  - total_latency
+  - prefill_tok_s
+  - decode_tok_s
+notes:
+  - Use ignore_eos when measuring strict tg512.
+

@@ -1,0 +1,44 @@
+# Python and environments
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Build outputs
+build/
+dist/
+*.egg-info/
+CMakeFiles/
+CMakeCache.txt
+
+# Model/data artifacts
+*.safetensors
+*.gguf
+*.bin
+*.pt
+*.pth
+*.onnx
+*.npy
+*.npz
+*.arrow
+*.parquet
+models/**/weights/
+models/**/snapshots/
+
+# Logs and huge benchmark dumps
+*.log
+*.jsonl
+reports/raw/*
+!reports/raw/README.md
+
+# Local secrets/config
+.env
+.env.*
+!.env.example
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/
+

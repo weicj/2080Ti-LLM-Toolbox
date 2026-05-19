@@ -1,0 +1,36 @@
+# Qwen3.6-35B-A3B AWQ
+
+Model:
+`feanors/Qwen3.6-35B-A3B-Claude-4.7-Opus-Reasoning-Distilled-AWQ-INT4`
+
+Status: not recommended despite high throughput.
+
+Runtime:
+
+- miniclaw dual RTX 2080 Ti
+- TP=2
+- vLLM 0.21
+- AWQ Marlin
+- FP16
+- max model length `65536`
+- FlashQLA legacy GDN prefill
+- FlashInfer full attention
+
+Throughput, MTP off:
+
+| Workload | Prefill | Decode | E2E |
+| --- | ---: | ---: | ---: |
+| pp4096/tg128 | `3235.3 tok/s` | `98.4 tok/s` | `2.57s` |
+| pp64K/tg512 | `2748.0 tok/s` | `85.9 tok/s` | `29.25s` |
+
+Quality:
+
+- Ragent6 0.2.2 zh-CN strict `10/60`
+- partial weighted `32.9/100`
+
+Risk:
+
+vLLM logged many missing MoE expert weight warnings for
+`down_proj.qweight/qzeros/scales`. The quality result suggests these warnings
+were not harmless.
+

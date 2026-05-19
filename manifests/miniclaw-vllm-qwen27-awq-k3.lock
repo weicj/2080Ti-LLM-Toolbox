@@ -1,0 +1,27 @@
+# miniclaw vLLM Qwen3.6-27B-AWQ MTP K=3 lock
+
+status = "partial"
+machine = "miniclaw"
+gpu = "2x RTX 2080 Ti"
+compute_capability = "SM75"
+tensor_parallel_size = 2
+
+engine = "vLLM"
+engine_version = "0.21.0"
+torch = "2.11.0 cu130"
+flashinfer = "0.6.8"
+quantization = "AWQ Marlin"
+attention = "FlashInfer full attention"
+gdn_prefill_backend = "FlashQLA legacy"
+speculative = "MTP K=3"
+
+max_model_len = 65536
+max_num_batched_tokens = 8192
+max_num_seqs = 1
+gpu_memory_utilization = 0.86
+
+notes = [
+  "Exact upstream commit hashes still need export from experiment environment.",
+  "64K/tg512 K=3 run ended at 405 tokens due EOS; strict ignore_eos rerun needed."
+]
+

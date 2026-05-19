@@ -1,0 +1,12 @@
+name: pp4k-tg128
+prompt_tokens: 4096
+max_tokens: 128
+temperature: 0
+record:
+  - prompt_tokens
+  - completion_tokens
+  - time_to_first_token
+  - total_latency
+  - prefill_tok_s
+  - decode_tok_s
+
