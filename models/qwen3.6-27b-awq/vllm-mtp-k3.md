@@ -1,6 +1,6 @@
 # Qwen3.6-27B-AWQ: vLLM MTP K=3
 
-Status: recommended current route.
+Status: recommended current route, including validated concurrent serving.
 
 Environment:
 
@@ -15,6 +15,7 @@ Environment:
   [weicj/FlashQLA-SM70-SM75](https://github.com/weicj/FlashQLA-SM70-SM75)
 - max model length `65536`
 - MTP `num_speculative_tokens=3`
+- `max_num_seqs=4` validated after the FlashQLA legacy GDN multi-prefill fix
 
 Single-request performance:
 
@@ -36,4 +37,20 @@ Sequential 60-request serving run:
 Compared with prior 27B llama.cpp runs, this was faster than the llama.cpp
 baseline `471.0s` and llama.cpp MTP n=2 `306.0s` on the same Ragent6 line.
 
-Provenance: copied from private lab logs dated 2026-05-19.
+Concurrent serving validation:
+
+| Workload | Concurrency | Prefill | Decode | E2E | Notes |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Streaming PP3800/TG128 | 1 | `1045.9 tok/s` | `35.2 tok/s` | `3.6s` | Per-request decode after TTFT was about `80.8 tok/s` |
+| Streaming PP3800/TG128 x2 | 2 | `929.7 tok/s` | `31.3 tok/s` | `8.2s` | Total PP7600/TG256 |
+| Streaming PP3800/TG128 x4 | 4 | `1318.3 tok/s` | `44.4 tok/s` | `11.5s` | Total PP15200/TG512 |
+| Ragent6 60-case shards | 1 | `770.5 tok/s` | `39.2 tok/s` | `164.0s` | Strict `43/60`, invalid `0` |
+| Ragent6 60-case shards | 2 | `815.1 tok/s` | `40.4 tok/s` | `151.0s` | Strict `43/60`, invalid `0` |
+| Ragent6 60-case shards | 4 | `944.2 tok/s` | `48.3 tok/s` | `124.0s` | Strict `43/60`, invalid `0` |
+
+The concurrency fix handles packed multi-sequence `cu_seqlens` by looping over
+sequences for FlashQLA legacy GDN prefill and reassembling output/final state.
+It is stable enough for `max_num_seqs=4`, but it is not the final high-performance
+fused ragged GDN implementation.
+
+Provenance: copied from private lab logs dated 2026-05-19 and 2026-05-20.

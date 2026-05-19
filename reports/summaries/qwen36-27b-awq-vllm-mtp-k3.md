@@ -22,4 +22,6 @@ Sequential 60-request serving run:
 Interpretation:
 
 This is the first route in this toolbox that is both fast enough and quality
-validated enough to be called a recommended path.
+validated enough to be called a recommended path. As of the 2026-05-20 stable
+build, the same route also supports validated `max_num_seqs=4` concurrent
+serving through a FlashQLA legacy GDN multi-prefill compatibility fix.

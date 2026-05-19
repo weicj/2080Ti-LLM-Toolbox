@@ -78,7 +78,49 @@ valid prefill/decode benchmark and repeated-request run. Current SGLang status
 is documented as compatibility bring-up in
 [models/qwen3.6-27b-awq/sglang-smoke.md](models/qwen3.6-27b-awq/sglang-smoke.md).
 
+## Multi-Concurrency Serving
+
+These rows are **not** single-request results. They measure the validated vLLM
+concurrency path after the FlashQLA legacy GDN multi-prefill fix. The stack is
+Qwen3.6-27B-AWQ, dual modified RTX 2080 Ti 22GB, TP=2, MTP K=3, AWQ Marlin,
+FlashInfer attention, FlashQLA SM70/SM75 legacy GDN prefill, `max_num_seqs=4`.
+
+The GDN fix makes packed `cu_seqlens` prefill batches work by looping over each
+sequence and reassembling output/state. It is a compatibility fix, not a fused
+ragged GDN kernel.
+
+### Streaming PP3800 / TG128
+
+| Concurrency | Prompt / Generate | Prefill | Decode | E2E | Notes |
+| --- | --- | ---: | ---: | ---: | --- |
+| 1 | PP3800/TG128 | `1045.9 tok/s` | `35.2 tok/s` | `3.6s` | Per-request decode after TTFT was about `80.8 tok/s` |
+| 2 | PP7600/TG256 total | `929.7 tok/s` | `31.3 tok/s` | `8.2s` | Two simultaneous streaming requests |
+| 4 | PP15200/TG512 total | `1318.3 tok/s` | `44.4 tok/s` | `11.5s` | Four simultaneous streaming requests; vLLM reported Running 4 reqs |
+
+### Ragent6 60-Request Concurrent Run
+
+This uses [Ragent6](https://github.com/weicj/Ragent6) 0.2.2 zh-CN as a real
+agent-style request stream. The 60 cases were split into 1, 2, or 4 concurrent
+shards. Quality was unchanged across all three rows: strict `43/60`, partial
+weighted `82.5/100`, partial raw `49.93/60`, invalid `0`.
+
+| Concurrency | Route | Prefill | Decode | E2E | Notes |
+| --- | --- | ---: | ---: | ---: | --- |
+| 1 | TP=2, MTP K=3 | `770.5 tok/s` | `39.2 tok/s` | `164.0s` | Max running requests: 1; draft acceptance `85.2%` |
+| 2 | TP=2, MTP K=3 | `815.1 tok/s` | `40.4 tok/s` | `151.0s` | Max running requests: 2; draft acceptance `81.4%` |
+| 4 | TP=2, MTP K=3 | `944.2 tok/s` | `48.3 tok/s` | `124.0s` | Max running requests: 4; draft acceptance `81.5%` |
+
+Interpretation:
+
+- The vLLM route now has validated multi-request serving, not just
+  single-request latency numbers.
+- Concurrency 4 improved Ragent6 wall time from the same-day concurrency-1 run
+  `164.0s` to `124.0s`, about `29.0` cases/min.
+- Aggregate throughput improves with batching, but TTFT rises and per-request
+  decode can drop. Keep this table separate from llama.cpp-style single-slot
+  comparisons.
+
 ## Provenance
 
-Numbers were copied from private lab logs dated 2026-05-17 through 2026-05-19.
+Numbers were copied from private lab logs dated 2026-05-17 through 2026-05-20.
 Machine-local paths are intentionally not published in this repository.

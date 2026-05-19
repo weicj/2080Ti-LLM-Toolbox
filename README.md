@@ -28,13 +28,18 @@ single-request serving numbers, not blended with multi-user batching results.
 
 | Framework | Current Status | Main Tested Model | Best Use Right Now |
 | --- | --- | --- | --- |
-| vLLM | Recommended route | `Qwen3.6-27B-AWQ` | Fast single-request serving on dual 22GB 2080 Ti with TP=2, FlashInfer, FlashQLA, AWQ Marlin, and MTP K=3 |
+| vLLM | Recommended route | `Qwen3.6-27B-AWQ` | Fast single-request serving and validated multi-request serving on dual 22GB 2080 Ti with TP=2, FlashInfer, FlashQLA, AWQ Marlin, and MTP K=3 |
 | llama.cpp | Reliable baseline | upstream-original Qwen3.6 27B GGUF conversion | Practical single-card baseline and fallback; slower long-prefill than vLLM, but simple and robust |
 | SGLang | Experimental | `Qwen3.6-27B-AWQ` | Compatibility research and patch archive; not ready for production comparison |
 
 FlashQLA is the kernel foundation for the vLLM and SGLang GDN path here. The
 SM70/SM75 backend is maintained separately at
 [weicj/FlashQLA-SM70-SM75](https://github.com/weicj/FlashQLA-SM70-SM75).
+The current vLLM build also includes a GDN multi-prefill compatibility fix for
+FlashQLA legacy: packed `cu_seqlens` prefill batches are split per sequence and
+reassembled. That makes `max_num_seqs=4` usable on the validated Qwen3.6 27B
+route, but it is still a compatibility loop rather than a fused ragged GDN
+kernel.
 
 ## Qwen3.6 27B Artifacts
 
@@ -110,6 +115,42 @@ Model scores from these runs are treated as sanity checks only. This repository
 is about whether the 2080 Ti serving stack runs fast and correctly; benchmark
 scores mostly reflect the model.
 
+## Concurrent Serving Validation
+
+These rows are intentionally separate from the single-request comparison above.
+They measure vLLM batching behavior after the FlashQLA GDN multi-prefill fix.
+The route is Qwen3.6-27B-AWQ, TP=2, MTP K=3, `max_num_seqs=4`, FlashInfer
+attention, AWQ Marlin, and FlashQLA SM70/SM75 legacy GDN prefill.
+
+### Streaming PP3800 / TG128
+
+| Concurrency | Prompt / Generate | Prefill | Decode | E2E | Notes |
+| --- | --- | ---: | ---: | ---: | --- |
+| 1 | PP3800/TG128 | `1045.9 tok/s` | `35.2 tok/s` | `3.6s` | Per-request decode after TTFT was about `80.8 tok/s` |
+| 2 | PP7600/TG256 total | `929.7 tok/s` | `31.3 tok/s` | `8.2s` | Two simultaneous streaming requests |
+| 4 | PP15200/TG512 total | `1318.3 tok/s` | `44.4 tok/s` | `11.5s` | Four simultaneous streaming requests |
+
+### Ragent6 60-Request Concurrent Run
+
+This uses [Ragent6](https://github.com/weicj/Ragent6) as the request stream,
+split into concurrent shards. Quality was unchanged across 1/2/4 concurrency:
+strict `43/60`, partial weighted `82.5/100`, invalid `0`.
+
+| Concurrency | Route | Prefill | Decode | E2E | Notes |
+| --- | --- | ---: | ---: | ---: | --- |
+| 1 | TP=2, MTP K=3 | `770.5 tok/s` | `39.2 tok/s` | `164.0s` | Max running requests: 1 |
+| 2 | TP=2, MTP K=3 | `815.1 tok/s` | `40.4 tok/s` | `151.0s` | Max running requests: 2 |
+| 4 | TP=2, MTP K=3 | `944.2 tok/s` | `48.3 tok/s` | `124.0s` | Max running requests: 4; about `29.0` cases/min |
+
+Interpretation:
+
+- The new vLLM build is no longer single-request-only for this route.
+- Four concurrent Ragent6 shards completed without GDN errors, tracebacks, or
+  HTTP 500s.
+- Concurrent batching improves aggregate throughput, but TTFT rises and
+  per-request decode can drop. Use the single-request tables for llama.cpp-style
+  latency comparison, and this section for multi-user serving capacity.
+
 ## SGLang SM75 Bring-Up
 
 SGLang is tracked as a separate experimental effort. It should not be read as a
@@ -146,6 +187,7 @@ See:
 
 - [BENCHMARKS.md](BENCHMARKS.md)
 - [models/qwen3.6-27b-awq/vllm-mtp-k3.md](models/qwen3.6-27b-awq/vllm-mtp-k3.md)
+- [reports/summaries/qwen36-27b-awq-vllm-gdn-concurrency.md](reports/summaries/qwen36-27b-awq-vllm-gdn-concurrency.md)
 - [models/qwen3.6-27b-awq/llamacpp-baseline.md](models/qwen3.6-27b-awq/llamacpp-baseline.md)
 - [models/qwen3.6-27b-awq/sglang-smoke.md](models/qwen3.6-27b-awq/sglang-smoke.md)
 
