@@ -8,7 +8,10 @@ legacy GDN prefill, AWQ Marlin, MTP K=3.
 
 Performance:
 
-- 4K/tg128: `1843.7 tok/s` prefill, `79.1 tok/s` decode, `3.8s` e2e.
+- 4K/tg128 earlier sweep: `1843.7 tok/s` prefill, `79.1 tok/s` decode,
+  `3.8s` e2e.
+- 4K/tg128 peak repeat: `1841.7 tok/s` median prefill, `101.3 tok/s` median
+  decode, `101.5 tok/s` max decode, `3.5s` median e2e.
 - 64K/tg512 cap: `1294.3 tok/s` prefill, `55.3 tok/s` decode, `56.8s` e2e.
 
 Sequential 60-request serving run:

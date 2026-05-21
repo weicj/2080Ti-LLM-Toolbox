@@ -21,8 +21,15 @@ Single-request performance:
 
 | Workload | Prompt | Completion | Prefill | Decode | E2E |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 4K/tg128 | 4096 | 128 | `1843.7 tok/s` | `79.1 tok/s` | `3.8s` |
+| 4K/tg128, earlier sweep | 4096 | 128 | `1843.7 tok/s` | `79.1 tok/s` | `3.8s` |
+| 4K/tg128, peak repeat median | 4096 | 128 | `1841.7 tok/s` | `101.3 tok/s` | `3.5s` |
 | 64K/tg512 cap | 64000 | 405 | `1294.3 tok/s` | `55.3 tok/s` | `56.8s` |
+
+The peak repeat used `max_model_len=8192`, `max_num_seqs=1`,
+`max_num_batched_tokens=8192`, `gpu_memory_utilization=0.86`, chunked prefill,
+async scheduling, MTP K=3, and `ignore_eos=true`. The three measured rows
+excluding warmup were `101.3`, `98.4`, and `101.5 tok/s` decode, so the median
+was `101.3 tok/s` and the max was `101.5 tok/s`.
 
 Sequential 60-request serving run:
 

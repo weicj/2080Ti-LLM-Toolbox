@@ -9,6 +9,8 @@ Status: best current route.
 Why:
 
 - Real 4K and 64K throughput numbers exist.
+- The current 4K single-request peak is PP4096/TG128 at `1841.7 tok/s` median
+  prefill and `101.3 tok/s` median decode, with max decode `101.5 tok/s`.
 - A sequential 60-request real serving run completed in `167.4s`.
 - Average prefill/generation throughput in that run was `700.9/35.2 tok/s`.
 - The updated vLLM build has validated `max_num_seqs=4` concurrent serving
@@ -63,8 +65,10 @@ target online use case.
 
 ### feanors/Qwen3.6-35B-A3B Claude/Opus distilled AWQ
 
-Throughput is high, but Ragent6 quality collapsed: strict `10/60`, partial
-weighted `32.9/100`. vLLM also reported many missing MoE expert weight warnings.
+This derivative checkpoint reached PP4096/TG128 `3235.3 tok/s` prefill and
+`98.4 tok/s` decode with MTP off. It is still rejected because Ragent6 quality
+collapsed: strict `10/60`, partial weighted `32.9/100`. vLLM also reported
+many missing MoE expert weight warnings.
 
 ### cyankiwi/gemma-4-31B-it-AWQ-4bit
 

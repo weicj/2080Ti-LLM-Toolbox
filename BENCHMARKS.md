@@ -32,7 +32,8 @@ Derivative model lines and non-27B routes are excluded from this scorecard.
 | vLLM | MTP off | Qwen3.6-27B-AWQ | `1858.0 tok/s` | `45.4 tok/s` | `5.1s` | Sweep baseline |
 | vLLM | MTP K=1 | Qwen3.6-27B-AWQ | `1814.1 tok/s` | `47.1 tok/s` | `5.0s` | Small decode gain |
 | vLLM | MTP K=2 | Qwen3.6-27B-AWQ | `1845.9 tok/s` | `63.4 tok/s` | `4.2s` | Good acceptance |
-| vLLM | MTP K=3 | Qwen3.6-27B-AWQ | `1843.7 tok/s` | `79.1 tok/s` | `3.8s` | Best current 4K result |
+| vLLM | MTP K=3 | Qwen3.6-27B-AWQ | `1843.7 tok/s` | `79.1 tok/s` | `3.8s` | Earlier sweep row |
+| vLLM | MTP K=3 peak repeat | Qwen3.6-27B-AWQ | `1841.7 tok/s` | `101.3 tok/s` | `3.5s` | Current peak 4K result; max decode `101.5 tok/s` |
 | vLLM | MTP K=4 | Qwen3.6-27B-AWQ | `1856.0 tok/s` | `72.0 tok/s` | `4.0s` | Fourth token acceptance regressed |
 | llama.cpp | upstream-original GGUF baseline | Qwen3.6-27B-Q4_K_M | `553.4 tok/s` | `23.7 tok/s` | `12.8s` | Single 2080 Ti, `cache_prompt=false` |
 
@@ -45,6 +46,22 @@ Derivative model lines and non-27B routes are excluded from this scorecard.
 | vLLM | MTP K=2 | Qwen3.6-27B-AWQ | `1295.4 tok/s` | `53.0 tok/s` | `57.1s` | EOS before strict 512 |
 | vLLM | MTP K=3 | Qwen3.6-27B-AWQ | `1294.3 tok/s` | `55.3 tok/s` | `56.8s` | Best current 64K result, EOS at 405 tokens |
 | llama.cpp | upstream-original GGUF baseline | Qwen3.6-27B-Q4_K_M | `383.1 tok/s` | `16.3 tok/s` | `198.6s` | Single 2080 Ti, `cache_prompt=false` |
+
+## High Throughput Rejected Route
+
+A derivative 35B-A3B checkpoint also reached near-100 TG, but it is not the
+recommended route because it failed the follow-up quality run.
+
+| Engine | Route | Model | Workload | Prefill | Decode | E2E | Decision |
+| --- | --- | --- | --- | ---: | ---: | ---: | --- |
+| vLLM | TP=2, MTP off, `ignore_eos=true` | Qwen3.6-35B-A3B-AWQ | PP4096/TG128 | `3235.3 tok/s` | `98.4 tok/s` | `2.57s` | Rejected: Ragent6 strict `10/60`, partial weighted `32.9/100` |
+| vLLM | TP=2, MTP off, `ignore_eos=true` | Qwen3.6-35B-A3B-AWQ | PP64K/TG512 | `2748.0 tok/s` | `85.9 tok/s` | `29.25s` | Same rejected checkpoint |
+
+See
+[reports/summaries/qwen36-27b-awq-vllm-peak-single-request.md](reports/summaries/qwen36-27b-awq-vllm-peak-single-request.md),
+[reports/summaries/qwen36-35b-a3b-awq-vllm-peak-rejected.md](reports/summaries/qwen36-35b-a3b-awq-vllm-peak-rejected.md)
+and
+[models/qwen3.6-35b-a3b-awq/README.md](models/qwen3.6-35b-a3b-awq/README.md).
 
 ### PP16K / TG4096
 

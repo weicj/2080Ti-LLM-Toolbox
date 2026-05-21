@@ -72,7 +72,8 @@ Single-request serving measurements grouped by workload:
 | Framework | Route | Model | Prefill | Decode | E2E | Status |
 | --- | --- | --- | ---: | ---: | ---: | --- |
 | vLLM | TP=2, MTP off | Qwen3.6-27B-AWQ | `1858.0 tok/s` | `45.4 tok/s` | `5.1s` | Dual-card baseline |
-| vLLM | TP=2, MTP K=3 | Qwen3.6-27B-AWQ | `1843.7 tok/s` | `79.1 tok/s` | `3.8s` | Best current 27B route |
+| vLLM | TP=2, MTP K=3 | Qwen3.6-27B-AWQ | `1843.7 tok/s` | `79.1 tok/s` | `3.8s` | Earlier sweep row |
+| vLLM | TP=2, MTP K=3 peak repeat | Qwen3.6-27B-AWQ | `1841.7 tok/s` | `101.3 tok/s` | `3.5s` | Current peak 27B route; max decode `101.5 tok/s` |
 | llama.cpp | upstream-original GGUF baseline | Qwen3.6-27B-Q4_K_M | `553.4 tok/s` | `23.7 tok/s` | `12.8s` | Single-card baseline |
 
 ### PP64K / TG512
@@ -101,6 +102,16 @@ Interpretation:
   prefill and MTP-assisted decode.
 - llama.cpp is still the practical baseline and the sanity check for every
   optimization claim.
+
+Peak-throughput note: the highest documented vLLM decode/TG number for the
+validated 27B route is `101.5 tok/s` max, `101.3 tok/s` median, from a
+PP4096/TG128 MTP K=3 repeat with `max_model_len=8192`, `max_num_seqs=1`, and
+`max_num_batched_tokens=8192`. A derivative `Qwen3.6-35B-A3B-AWQ` checkpoint
+also reached `98.4 tok/s`, but that route is not recommended: Ragent6 0.2.2
+zh-CN collapsed to strict `10/60` and partial weighted `32.9/100`. See
+[reports/summaries/qwen36-27b-awq-vllm-peak-single-request.md](reports/summaries/qwen36-27b-awq-vllm-peak-single-request.md),
+[models/qwen3.6-35b-a3b-awq](models/qwen3.6-35b-a3b-awq/README.md), and
+[reports/summaries/qwen36-35b-a3b-awq-vllm-peak-rejected.md](reports/summaries/qwen36-35b-a3b-awq-vllm-peak-rejected.md).
 
 ## Sequential 60-Request Serving Run
 
