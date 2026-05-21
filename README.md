@@ -7,22 +7,36 @@ This is a working toolbox, not an official support matrix. The main target is a
 dual modified RTX 2080 Ti 22GB NVLink rig. The notes should still help other
 SM75 users understand which paths are realistic and which ones are dead ends.
 
+## Peak Result
+
+Peak single-request speed on dual modified RTX 2080 Ti 22GB cards with NVLink,
+using PP4096 / TG128:
+
+| Model | Median Prefill | Median Decode |
+| --- | ---: | ---: |
+| `Qwen3.6-27B-AWQ` | `1841.7 tok/s` | `101.3 tok/s` |
+
+That is the result to compare against when judging whether an SM75 setup is
+actually in the right performance class. The detailed table and provenance are
+in
+[reports/summaries/qwen36-27b-awq-vllm-peak-single-request.md](reports/summaries/qwen36-27b-awq-vllm-peak-single-request.md).
+
 ## Recommended Route
 
-For the tested dual 22GB 2080 Ti system, the best route is:
+This is the stack behind the peak result:
 
 ```text
-Qwen3.6-27B-AWQ
 vLLM 0.21.0
 torch 2.11 cu130
 TP=2
 AWQ Marlin
-FlashInfer attention
+FlashInfer/FA2 attention
 FlashQLA SM70/SM75 legacy GDN prefill
 MTP K=3
 ```
 
-Read these first before trying other engines or KV experiments:
+Use these first when reproducing the peak result or comparing other engines /
+KV experiments:
 
 - Recipe: [engines/vllm/recipes/qwen36-27b-awq-best-sm75.md](engines/vllm/recipes/qwen36-27b-awq-best-sm75.md)
 - Patch queue: [engines/vllm/patches](engines/vllm/patches/README.md)
@@ -67,8 +81,7 @@ is maintained at [weicj/FlashQLA-SM70-SM75](https://github.com/weicj/FlashQLA-SM
 
 The vLLM path has real performance, quality, and stability evidence:
 
-- PP4096/TG128 peak repeat: `1841.7 tok/s` median prefill,
-  `101.3 tok/s` median decode, `101.5 tok/s` max decode.
+- PP4096/TG128 peak repeat: see the peak table at the top of this README.
 - PP64K/TG512: `1294.3 tok/s` prefill, `55.3 tok/s` decode.
 - Sequential 60-request Ragent6 run: `167.4s` wall, average
   `700.9 tok/s` prefill and `35.2 tok/s` generation.
