@@ -2,6 +2,10 @@
 
 Status: recommended current route.
 
+For the complete current best SM75 recipe, including the required FlashQLA GDN
+patch and the peak `101.5 tok/s` decode profile, see
+[qwen36-27b-awq-best-sm75.md](qwen36-27b-awq-best-sm75.md).
+
 Core settings:
 
 ```text
@@ -24,5 +28,4 @@ Observed result:
 - Sequential 60-request serving run: `167.4s` wall, average prefill
   `700.9 tok/s`, average generation `35.2 tok/s`.
 
-TODO: export the exact launch script from the private lab experiment and remove
-machine-specific paths.
+The exact best-version patch queue is now recorded under `../patches/`.

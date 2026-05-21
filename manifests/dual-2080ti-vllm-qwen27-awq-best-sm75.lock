@@ -1,0 +1,53 @@
+# dual RTX 2080 Ti vLLM Qwen3.6-27B-AWQ best SM75 route lock
+
+status = "recommended"
+machine = "private dual-2080ti lab rig"
+gpu = "2x modified RTX 2080 Ti 22GB"
+compute_capability = "SM75"
+interconnect = "NVLink"
+gpu_stepping = "TU102-300A + TU102-300"
+tensor_parallel_size = 2
+
+engine = "vLLM"
+engine_version = "0.21.0"
+torch = "2.11.0 cu130"
+flashinfer = "0.6.8"
+quantization = "AWQ Marlin"
+attention = "FlashInfer full attention"
+gdn_prefill_backend = "FlashQLA SM70/SM75 legacy"
+flashqla_repo = "https://github.com/weicj/FlashQLA-SM70-SM75"
+speculative = "MTP K=3"
+
+required_patches = [
+  "engines/vllm/patches/0001-sm75-flashqla-gdn-ragged-prefill.patch",
+]
+
+peak_profile = "single-request PP4096/TG128"
+peak_max_model_len = 8192
+peak_max_num_batched_tokens = 8192
+peak_max_num_seqs = 1
+peak_gpu_memory_utilization = 0.86
+peak_median_prefill_tok_s = 1841.7
+peak_median_decode_tok_s = 101.3
+peak_max_decode_tok_s = 101.5
+peak_median_e2e_s = 3.485
+
+stable_profile = "general serving"
+stable_max_model_len = 65536
+stable_max_num_batched_tokens = 8192
+stable_max_num_seqs = 1
+stable_gpu_memory_utilization = 0.86
+stable_64k_prefill_tok_s = 1294.3
+stable_64k_decode_tok_s = 55.3
+stable_ragent6_wall_s = 167.4
+stable_ragent6_prefill_tok_s = 700.9
+stable_ragent6_generation_tok_s = 35.2
+
+concurrency_validated_max_num_seqs = 4
+concurrency_quality = "Ragent6 strict 43/60, weighted 82.5/100, invalid 0"
+
+notes = [
+  "Peak profile is a single-request microbenchmark and should not be mixed with concurrent aggregate throughput.",
+  "GDN ragged patch is a compatibility loop over packed sequences, not a fused ragged kernel.",
+  "TurboQuant KV is tracked in dual-2080ti-vllm-qwen27-awq-turboquant-kv.lock as a validated experimental branch.",
+]

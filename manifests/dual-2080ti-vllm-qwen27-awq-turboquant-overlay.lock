@@ -1,0 +1,38 @@
+# dual RTX 2080 Ti vLLM TurboQuant overlay inventory
+
+status = "validated experimental SM75 compatibility"
+source_environment = "private dual-2080ti lab stable vLLM install"
+engine = "vLLM"
+engine_version = "0.21.0"
+python = "3.11"
+
+purpose = "Inventory for the TurboQuant KV overlay used by the validated full60 runs."
+
+required_behavior = [
+  "TurboQuant cache dtypes are registered and selectable through vLLM cache config.",
+  "TurboQuant attention uses raw FP16 K/V for prefill and compressed K/V cache for decode.",
+  "First-chunk prefill uses FlashAttention/FlashInfer where available.",
+  "Continuation prefill uses TurboQuant decode for small chunks and FlashAttention after dequant for large chunks.",
+  "Attention scaling must use the model attention scale, not an implicit default that changes quality.",
+]
+
+files = [
+  { path = "vllm/v1/attention/backends/turboquant_attn.py", sha256 = "f11c28947a7a2fa9f80edbfe8a9daac6ef7f96171763b4c8454828bb9c829539" },
+  { path = "vllm/v1/attention/ops/triton_turboquant_store.py", sha256 = "0ac49b3da69a70fdc6e7b1800237a81f8398f8509770d0f48d1938d926d06e45" },
+  { path = "vllm/v1/attention/ops/triton_turboquant_decode.py", sha256 = "8e52678136449e4bbca2195fbcbb87426c955a2b1b8422e7ab9511e45ee5f5c6" },
+  { path = "vllm/model_executor/layers/quantization/turboquant/__init__.py", sha256 = "37b3a63c0e433507d1ed7e4345663a7d0284d3b6334581cadbaa5ec9b54d6f0b" },
+  { path = "vllm/model_executor/layers/quantization/turboquant/centroids.py", sha256 = "0a0ec4cb3b1380d6f6983835a1ded5ebaa03d6a0927541f9dcf59d6423d4ad1d" },
+  { path = "vllm/model_executor/layers/quantization/turboquant/config.py", sha256 = "1c154faac156c2d7974ad13ac46b4399199e71f2f766ba9597740da3ad8d95ea" },
+  { path = "vllm/model_executor/layers/quantization/turboquant/quantizer.py", sha256 = "c02c1581e71bca1cacc0430ce47d812fdc510645048736ab6e32c10f95c94b94" },
+  { path = "vllm/config/cache.py", sha256 = "4e8511bb8ff4d4028778885bb842b4242e171571ecfec54a79dbe12ebf102325" },
+  { path = "vllm/config/attention.py", sha256 = "32ecd6d01c858e956464dd0d6d63e1306f436dc9381bc0487738c3167fe3a3e1" },
+  { path = "vllm/v1/attention/backends/registry.py", sha256 = "7fb25011963b6de204f2343b9230287cc195acc8284dbc2eb026fda0dcd26a79" },
+  { path = "vllm/engine/arg_utils.py", sha256 = "0d0c2f92c40d4d55335054cc1cf902adb9a6c1d5b2b9c002483b5ac7aaca82d5" },
+  { path = "vllm/model_executor/layers/attention/attention.py", sha256 = "7f9b2fd715014e079816c0eec94276234a5225e5ea8460e6a251bed80fe24aca" },
+]
+
+notes = [
+  "This is an overlay inventory, not a vendored source dump.",
+  "The separately tracked best SM75 route can run without TurboQuant KV.",
+  "The validated TurboQuant rows are documented in engines/vllm/recipes/qwen36-27b-awq-turboquant-kv.md and reports/summaries/qwen36-27b-awq-vllm-turboquant-kv.md.",
+]

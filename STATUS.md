@@ -9,6 +9,9 @@ Status: best current route.
 Why:
 
 - Real 4K and 64K throughput numbers exist.
+- The current best-version recipe and required patch queue are recorded under
+  `engines/vllm/recipes/qwen36-27b-awq-best-sm75.md` and
+  `engines/vllm/patches/`.
 - The current 4K single-request peak is PP4096/TG128 at `1841.7 tok/s` median
   prefill and `101.3 tok/s` median decode, with max decode `101.5 tok/s`.
 - A sequential 60-request real serving run completed in `167.4s`.

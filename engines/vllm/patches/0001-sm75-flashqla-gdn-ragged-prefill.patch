@@ -1,0 +1,108 @@
+--- vllm/model_executor/layers/mamba/gdn_linear_attn.py
++++ vllm/model_executor/layers/mamba/gdn_linear_attn.py
+@@ -147,29 +147,87 @@
+         chunk_gated_delta_rule_fwd_legacy,
+     )
+ 
+-    if cu_seqlens is not None:
+-        cu = cu_seqlens.detach().cpu().tolist()
+-        if len(cu) != 2 or cu[0] != 0 or cu[1] != q.shape[1]:
+-            raise NotImplementedError(
+-                "FlashQLA legacy GDN prefill currently supports one "
+-                "contiguous prefill sequence only"
+-            )
+-
+     if use_qk_l2norm_in_kernel:
+         q = l2norm_fwd(q)
+         k = l2norm_fwd(k)
+ 
+     scale = q.shape[-1] ** -0.5
+-    output, final_state = chunk_gated_delta_rule_fwd_legacy(
+-        q.contiguous(),
+-        k.contiguous(),
+-        v.contiguous(),
+-        g.contiguous(),
+-        beta.contiguous(),
+-        scale,
+-        initial_state.contiguous(),
+-    )
+-    output = output.to(v.dtype)
++
++    if cu_seqlens is None:
++        output, final_state = chunk_gated_delta_rule_fwd_legacy(
++            q.contiguous(),
++            k.contiguous(),
++            v.contiguous(),
++            g.contiguous(),
++            beta.contiguous(),
++            scale,
++            initial_state.contiguous(),
++        )
++        output = output.to(v.dtype)
++        if output_final_state:
++            return output, final_state
++        return output, None
++
++    cu = cu_seqlens.detach().cpu().tolist()
++    if len(cu) == 2 and cu[0] == 0 and cu[1] == q.shape[1]:
++        output, final_state = chunk_gated_delta_rule_fwd_legacy(
++            q.contiguous(),
++            k.contiguous(),
++            v.contiguous(),
++            g.contiguous(),
++            beta.contiguous(),
++            scale,
++            initial_state.contiguous(),
++        )
++        output = output.to(v.dtype)
++        if output_final_state:
++            return output, final_state
++        return output, None
++
++    if q.shape[0] != 1:
++        raise NotImplementedError(
++            "FlashQLA legacy ragged GDN prefill expects packed q/k/v "
++            "with batch dimension 1"
++        )
++    if cu[0] != 0 or cu[-1] != q.shape[1]:
++        raise ValueError("cu_seqlens must cover the packed GDN prefill tokens")
++
++    num_sequences = len(cu) - 1
++    if initial_state.shape[0] not in (1, num_sequences):
++        raise ValueError(
++            "initial_state first dimension must be 1 or match "
++            "the number of packed GDN prefill sequences"
++        )
++
++    outputs = []
++    final_states = []
++    for seq_idx, (start, end) in enumerate(zip(cu[:-1], cu[1:])):
++        if end <= start:
++            continue
++        state_idx = seq_idx if initial_state.shape[0] == num_sequences else 0
++        seq_output, seq_final_state = chunk_gated_delta_rule_fwd_legacy(
++            q[:, start:end].contiguous(),
++            k[:, start:end].contiguous(),
++            v[:, start:end].contiguous(),
++            g[:, start:end].contiguous(),
++            beta[:, start:end].contiguous(),
++            scale,
++            initial_state[state_idx : state_idx + 1].contiguous(),
++        )
++        outputs.append(seq_output.to(v.dtype))
++        final_states.append(seq_final_state)
++
++    if not outputs:
++        output = torch.empty(
++            (q.shape[0], 0, v.shape[2], v.shape[3]),
++            device=v.device,
++            dtype=v.dtype,
++        )
++        final_state = initial_state[:0] if output_final_state else None
++    else:
++        output = torch.cat(outputs, dim=1)
++        final_state = torch.cat(final_states, dim=0)
++
+     if output_final_state:
+         return output, final_state
+     return output, None

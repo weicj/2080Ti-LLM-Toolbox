@@ -46,6 +46,8 @@ TurboQuant KV status:
 
 See:
 
+- [engines/vllm/recipes/qwen36-27b-awq-best-sm75.md](recipes/qwen36-27b-awq-best-sm75.md)
+- [engines/vllm/patches](patches/README.md)
 - [models/qwen3.6-27b-awq/vllm-mtp-k3.md](../../models/qwen3.6-27b-awq/vllm-mtp-k3.md)
 - [models/qwen3.6-27b-awq/vllm-turboquant-kv.md](../../models/qwen3.6-27b-awq/vllm-turboquant-kv.md)
 - [reports/summaries/qwen36-27b-awq-vllm-gdn-concurrency.md](../../reports/summaries/qwen36-27b-awq-vllm-gdn-concurrency.md)

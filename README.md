@@ -41,6 +41,12 @@ reassembled. That makes `max_num_seqs=4` usable on the validated Qwen3.6 27B
 route, but it is still a compatibility loop rather than a fused ragged GDN
 kernel.
 
+The current best-version recipe and patch queue are recorded in
+[engines/vllm/recipes/qwen36-27b-awq-best-sm75.md](engines/vllm/recipes/qwen36-27b-awq-best-sm75.md)
+and [engines/vllm/patches](engines/vllm/patches/README.md). This is the
+reproduction entry point for the FlashInfer + FlashQLA + AWQ Marlin + MTP K=3
+route before layering TurboQuant KV experiments on top.
+
 The 2026-05-21 experiment tree also validated TurboQuant KV on the same dual
 2080 Ti route. `turboquant_4bit_nc` and `turboquant_k8v4` both completed the
 Ragent6 0.2.2 zh-CN full60 run with `invalid=0` after keeping the FA2 prefill
