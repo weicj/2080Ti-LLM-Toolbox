@@ -19,6 +19,24 @@ Why:
   benchmarks, because case runtimes are uneven.
 - Model quality was checked only as a sanity signal for the route.
 
+### Qwen3.6-27B-AWQ + vLLM + TurboQuant KV
+
+Status: validated experimental SM75 compatibility.
+
+Why:
+
+- `turboquant_4bit_nc` and `turboquant_k8v4` both completed Ragent6 0.2.2
+  zh-CN full60 with `invalid=0`.
+- The successful route kept TurboQuant prefill on the FlashInfer/FA2 path and
+  fixed the missing `sm_scale` argument in the TurboQuant ragged prefill plan.
+- `tq4nc` is the stronger practical result so far: full60 wall `319s`,
+  weighted `75.4`, invalid `0`, `max_model_len=43680`.
+- `tqk8v4` completed full60 at `315s`, weighted `63.0`, invalid `0`, but needed
+  `max_model_len=35840` in this run.
+- Current experiment-tree resource behavior is not yet ideal: vLLM reported
+  only `0.93 GiB` available KV memory for both TurboQuant rows, giving lower
+  cache capacity than native INT8/FP16 rows despite the compressed KV format.
+
 ## Experimental
 
 ### Qwen3.6-27B-AWQ + SGLang

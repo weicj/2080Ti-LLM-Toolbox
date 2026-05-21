@@ -28,7 +28,7 @@ single-request serving numbers, not blended with multi-user batching results.
 
 | Framework | Current Status | Main Tested Model | Best Use Right Now |
 | --- | --- | --- | --- |
-| vLLM | Recommended route | `Qwen3.6-27B-AWQ` | Fast single-request serving and validated multi-request serving on dual 22GB 2080 Ti with TP=2, FlashInfer, FlashQLA, AWQ Marlin, and MTP K=3 |
+| vLLM | Recommended route | `Qwen3.6-27B-AWQ` | Fast single-request serving and validated multi-request serving on dual 22GB 2080 Ti with TP=2, FlashInfer, FlashQLA, AWQ Marlin, and MTP K=3; TurboQuant KV is now validated as an experimental KV route |
 | llama.cpp | Reliable baseline | upstream-original Qwen3.6 27B GGUF conversion | Practical single-card baseline and fallback; slower long-prefill than vLLM, but simple and robust |
 | SGLang | Experimental | `Qwen3.6-27B-AWQ` | Compatibility research and patch archive; not ready for production comparison |
 
@@ -40,6 +40,13 @@ FlashQLA legacy: packed `cu_seqlens` prefill batches are split per sequence and
 reassembled. That makes `max_num_seqs=4` usable on the validated Qwen3.6 27B
 route, but it is still a compatibility loop rather than a fused ragged GDN
 kernel.
+
+The 2026-05-21 experiment tree also validated TurboQuant KV on the same dual
+2080 Ti route. `turboquant_4bit_nc` and `turboquant_k8v4` both completed the
+Ragent6 0.2.2 zh-CN full60 run with `invalid=0` after keeping the FA2 prefill
+route and passing `sm_scale` into the TurboQuant FlashInfer ragged prefill plan.
+This is recorded as validated experimental SM75 compatibility, not as the
+default stable route yet.
 
 ## Qwen3.6 27B Artifacts
 
@@ -115,6 +122,36 @@ Model scores from these runs are treated as sanity checks only. This repository
 is about whether the 2080 Ti serving stack runs fast and correctly; benchmark
 scores mostly reflect the model.
 
+### KV dtype comparison under the 2026-05-21 experiment tree
+
+These rows use the same Ragent6 0.2.2 zh-CN full60 request stream with vLLM
+TP=2, AWQ Marlin, FlashQLA legacy GDN prefill, FlashInfer/FA2 TurboQuant
+prefill where applicable, MTP K=3, eager mode, no async scheduling,
+`max_num_batched_tokens=4096`, and `gpu_memory_utilization=0.90`.
+
+The prefill/decode columns here are vLLM 10-second logger windows from uneven
+agent requests, shown as `min/mean/max`; use wall time for the full-run
+comparison.
+
+| KV dtype | Max model len | Available KV memory | GPU KV cache | Max concurrency | Prefill window | Decode window | Full60 wall | Weighted | Invalid | Status |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| `turboquant_4bit_nc` | 43,680 | `0.93 GiB` | `58,800 tok` | `1.35x` | `0.0/354.6/952.9 tok/s` | `2.7/19.2/26.4 tok/s` | `319s` | `75.4` | `0` | Validated, best TQ quality |
+| `turboquant_k8v4` | 35,840 | `0.93 GiB` | `43,255 tok` | `1.21x` | `0.0/353.3/1145.5 tok/s` | `4.7/19.4/25.6 tok/s` | `315s` | `63.0` | `0` | Validated, shorter context |
+| `int8_per_token_head` | 43,680 | `7.47 GiB` | `312,312 tok` | `7.15x` | `18.1/384.5/952.9 tok/s` | `0.3/19.0/26.8 tok/s` | `296s` | `70.0` | `0` | Capacity leader in this build |
+| `float16` | 43,680 | `7.47 GiB` | `187,106 tok` | `4.28x` | `23.9/471.4/1111.2 tok/s` | `3.5/20.1/29.2 tok/s` | `487s` | `74.8` | `0` | Slowest full60 wall |
+
+Interpretation:
+
+- `tq4nc` is the practical TurboQuant result from this run: quality matched the
+  FP16 sanity band while keeping wall time close to INT8.
+- Current TurboQuant allocator behavior in this experiment tree left only
+  `0.93 GiB` as vLLM-reported available KV memory, so the measured cache
+  capacity is lower than native `int8_per_token_head` or `float16` despite the
+  compressed KV format. Treat theoretical KV compression and current vLLM
+  allocator capacity as separate resource questions.
+- `tqk8v4` was stable only at `max_model_len=35840` in this full60 run; the
+  `43680` setting failed earlier during KV capacity initialization.
+
 ## Concurrent Serving Validation
 
 These rows are intentionally separate from the single-request comparison above.
@@ -182,7 +219,9 @@ See:
 
 - [BENCHMARKS.md](BENCHMARKS.md)
 - [models/qwen3.6-27b-awq/vllm-mtp-k3.md](models/qwen3.6-27b-awq/vllm-mtp-k3.md)
+- [models/qwen3.6-27b-awq/vllm-turboquant-kv.md](models/qwen3.6-27b-awq/vllm-turboquant-kv.md)
 - [reports/summaries/qwen36-27b-awq-vllm-gdn-concurrency.md](reports/summaries/qwen36-27b-awq-vllm-gdn-concurrency.md)
+- [reports/summaries/qwen36-27b-awq-vllm-turboquant-kv.md](reports/summaries/qwen36-27b-awq-vllm-turboquant-kv.md)
 - [models/qwen3.6-27b-awq/llamacpp-baseline.md](models/qwen3.6-27b-awq/llamacpp-baseline.md)
 - [models/qwen3.6-27b-awq/sglang-smoke.md](models/qwen3.6-27b-awq/sglang-smoke.md)
 

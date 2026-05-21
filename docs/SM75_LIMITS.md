@@ -14,8 +14,12 @@ Observed constraints:
   kernels when the upstream code assumes newer GPU support.
 - Long-context serving may be possible, but the viable path can differ sharply
   between prefill and decode.
+- KV quantization support must be judged by the runtime allocator result, not
+  only by theoretical bytes per token. In the 2026-05-21 vLLM TurboQuant
+  experiment tree, `turboquant_4bit_nc` and `turboquant_k8v4` were quality
+  stable, but vLLM reported only `0.93 GiB` available KV memory after engine
+  initialization, less than the native INT8/FP16 rows in the same experiment.
 
 Design rule for this repo: record which operation fails, which backend selected
 it, and whether the failure is a kernel image issue, shared-memory issue,
 quantization layout issue, or quality issue.
-

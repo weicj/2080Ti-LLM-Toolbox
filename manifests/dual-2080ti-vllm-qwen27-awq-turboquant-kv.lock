@@ -1,0 +1,41 @@
+# dual RTX 2080 Ti vLLM Qwen3.6-27B-AWQ TurboQuant KV lock
+
+status = "validated-experimental"
+machine = "private dual-2080ti lab rig"
+gpu = "2x modified RTX 2080 Ti 22GB"
+compute_capability = "SM75"
+interconnect = "NVLink"
+tensor_parallel_size = 2
+
+engine = "vLLM"
+engine_version = "0.21.0"
+torch = "2.11.0 cu130"
+flashinfer = "0.6.8"
+quantization = "AWQ Marlin"
+gdn_prefill_backend = "FlashQLA SM70/SM75 legacy"
+turboquant_prefill_backend = "FlashInfer/FA2"
+speculative = "MTP K=3"
+
+enforce_eager = true
+async_scheduling = false
+max_num_batched_tokens = 4096
+max_num_seqs = 1
+gpu_memory_utilization = 0.90
+pytorch_cuda_alloc_conf = "expandable_segments:True"
+
+validated_rows = [
+  { kv_cache_dtype = "turboquant_4bit_nc", max_model_len = 43680, full60_wall_seconds = 319, weighted_score = 75.4, invalid_cases = 0, available_kv_memory = "0.93 GiB", gpu_kv_cache_tokens = 58800, max_concurrency = "1.35x", extrapolated_250k_kv_gib = 4.0 },
+  { kv_cache_dtype = "turboquant_k8v4", max_model_len = 35840, full60_wall_seconds = 315, weighted_score = 63.0, invalid_cases = 0, available_kv_memory = "0.93 GiB", gpu_kv_cache_tokens = 43255, max_concurrency = "1.21x", extrapolated_250k_kv_gib = 5.4 },
+  { kv_cache_dtype = "int8_per_token_head", max_model_len = 43680, full60_wall_seconds = 296, weighted_score = 70.0, invalid_cases = 0, available_kv_memory = "7.47 GiB", gpu_kv_cache_tokens = 312312, max_concurrency = "7.15x", extrapolated_250k_kv_gib = 6.0 },
+  { kv_cache_dtype = "float16", max_model_len = 43680, full60_wall_seconds = 487, weighted_score = 74.8, invalid_cases = 0, available_kv_memory = "7.47 GiB", gpu_kv_cache_tokens = 187106, max_concurrency = "4.28x", extrapolated_250k_kv_gib = 10.0 },
+]
+
+required_fix = "TurboQuant FlashInfer ragged prefill plan passes sm_scale=self.scale"
+
+notes = [
+  "TurboQuant rows are quality/stability validated but not final resource-efficiency winners in this experiment tree.",
+  "vLLM reported lower available KV memory for TurboQuant rows than for native INT8/FP16 rows.",
+  "tqk8v4 required max_model_len=35840 for the validated full60 run.",
+  "250K KV footprint is extrapolated from vLLM cache-size logs, not validated as a 250K serving result.",
+  "Controlled PP/TG prefill/decode benchmarks are still needed for a clean speed comparison."
+]

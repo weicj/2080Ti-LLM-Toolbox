@@ -78,6 +78,33 @@ valid prefill/decode benchmark and repeated-request run. Current SGLang status
 is documented as compatibility bring-up in
 [models/qwen3.6-27b-awq/sglang-smoke.md](models/qwen3.6-27b-awq/sglang-smoke.md).
 
+### KV dtype comparison: experiment tree full60
+
+This table is not directly comparable with the stable `167.4s` row above: it
+uses the 2026-05-21 experiment tree, `max_num_batched_tokens=4096`, eager mode,
+no async scheduling, and Ragent6 0.2.2 zh-CN full60. It is included to record
+the TurboQuant KV bring-up and resource behavior.
+
+The prefill/decode values are vLLM 10-second logger windows from uneven agent
+requests, shown as `min/mean/max`; the full-run comparison signal is wall time,
+quality, and stability.
+
+| KV dtype | Max model len | Available KV memory | GPU KV cache | Max concurrency | Prefill window | Decode window | Full60 wall | Weighted | Invalid | Notes |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| `turboquant_4bit_nc` | 43,680 | `0.93 GiB` | `58,800 tok` | `1.35x` | `0.0/354.6/952.9 tok/s` | `2.7/19.2/26.4 tok/s` | `319s` | `75.4` | `0` | Best TurboQuant quality result |
+| `turboquant_k8v4` | 35,840 | `0.93 GiB` | `43,255 tok` | `1.21x` | `0.0/353.3/1145.5 tok/s` | `4.7/19.4/25.6 tok/s` | `315s` | `63.0` | `0` | Needs shorter context in this build |
+| `int8_per_token_head` | 43,680 | `7.47 GiB` | `312,312 tok` | `7.15x` | `18.1/384.5/952.9 tok/s` | `0.3/19.0/26.8 tok/s` | `296s` | `70.0` | `0` | Highest observed KV capacity |
+| `float16` | 43,680 | `7.47 GiB` | `187,106 tok` | `4.28x` | `23.9/471.4/1111.2 tok/s` | `3.5/20.1/29.2 tok/s` | `487s` | `74.8` | `0` | Slowest full60 wall |
+
+Observed stability for all four rows: no `OutOfMemoryError`, `EngineDeadError`,
+HTTP 500, traceback, or connection reset was found in the matching server logs.
+
+Important resource caveat: in this experiment tree, the TurboQuant rows reported
+only `0.93 GiB` available for vLLM KV cache after engine initialization, so their
+measured cache capacity is lower than native INT8/FP16 rows. That is current
+allocator/runtime behavior, not the theoretical compression ratio of the KV
+format.
+
 ## Multi-Concurrency Serving
 
 These rows are **not** single-request results. They measure the validated vLLM

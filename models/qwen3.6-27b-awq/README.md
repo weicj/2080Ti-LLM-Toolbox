@@ -8,6 +8,7 @@ This is the first main target for 2080Ti LLM Toolbox.
 
 ## Experimental
 
+- [vLLM TurboQuant KV](vllm-turboquant-kv.md)
 - [SGLang smoke](sglang-smoke.md)
 
 ## Baseline
