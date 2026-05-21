@@ -115,17 +115,18 @@ TurboQuant KV is useful, but not yet the default route.
 
 Validated rows from the 2026-05-21 experiment tree:
 
-| KV dtype | Full60 wall | Weighted | Invalid | Notes |
+| KV dtype | Estimated 256K KV footprint | Ragent6 Walltime | Ragent6 Result | Notes |
 | --- | ---: | ---: | ---: | --- |
-| `turboquant_4bit_nc` | `319s` | `75.4` | `0` | Best practical TurboQuant result so far |
-| `turboquant_k8v4` | `315s` | `63.0` | `0` | Stable only at shorter context in this run |
-| `int8_per_token_head` | `296s` | `70.0` | `0` | Highest observed vLLM KV capacity in this build |
-| `float16` | `487s` | `74.8` | `0` | Slowest full60 wall |
+| `turboquant_4bit_nc` | `~4.2 GiB` | `319s` | `75.4` | Best practical TurboQuant result so far |
+| `turboquant_k8v4` | `~5.7 GiB` | `315s` | `63.0` | Stable only at shorter context in this run |
+| `int8_per_token_head` | `~6.3 GiB` | `296s` | `70.0` | Highest observed vLLM KV capacity in this build |
+| `float16` | `~10.5 GiB` | `487s` | `74.8` | Slowest Ragent6 walltime |
 
 Important caveat: the TurboQuant rows reported only `0.93 GiB` available vLLM KV
 memory after engine initialization, lower than native INT8/FP16 rows in the same
 experiment tree. Treat theoretical KV compression and current vLLM allocator
-capacity as separate questions.
+capacity as separate questions. The 256K KV footprints above are extrapolated
+from vLLM cache-size logs, not validated 256K serving results.
 
 Details:
 
