@@ -10,16 +10,36 @@ SM75 users understand which paths are realistic and which ones are dead ends.
 ## Peak Result
 
 Peak single-request speed on dual modified RTX 2080 Ti 22GB cards with NVLink,
-using PP4096 / TG128:
+plus the largest measured KV cache from the 262K startup probe:
 
-| Model | Median Prefill | Median Decode |
-| --- | ---: | ---: |
-| `Qwen3.6-27B-AWQ` | `1841.7 tok/s` | `101.3 tok/s` |
+| Model | Median Prefill | Median Decode | Max KV Cache |
+| --- | ---: | ---: | ---: |
+| `Qwen3.6-27B-AWQ` | `1841.7 tok/s` | `101.3 tok/s` | `735,084 tok` |
 
 That is the result to compare against when judging whether an SM75 setup is
 actually in the right performance class. The detailed table and provenance are
 in
 [reports/summaries/qwen36-27b-awq-vllm-peak-single-request.md](reports/summaries/qwen36-27b-awq-vllm-peak-single-request.md).
+The speed columns use the PP4096/TG128 repeat. The max-cache column is the
+`turboquant_4bit_nc` `max_model_len=262144` startup/cache probe.
+
+## Long-Context Capacity
+
+The same dual 22GB 2080 Ti rig can create a real `max_model_len=262144` vLLM
+cache. The most aggressive measured row is TurboQuant `4bit_nc`:
+
+| KV dtype | vLLM reported KV cache | Total used VRAM / 2080 Ti |
+| --- | ---: | ---: |
+| `turboquant_4bit_nc` | `735,084 tok` | `20,595 MiB` |
+| `turboquant_k8v4` | `520,461 tok` | `20,615 MiB` |
+| `int8_per_token_head` | `518,397 tok` | `20,633 MiB` |
+| `auto` / FP16 | `272,938 tok` | `20,633 MiB` |
+
+The VRAM column is total `nvidia-smi` device memory after startup, including
+weights, runtime/workspace, and KV cache. It is not KV-only footprint. This is a
+startup/cache/VRAM probe, not a full 262K long-prompt throughput benchmark.
+Details:
+[reports/summaries/qwen36-27b-awq-vllm-ctx262k-kv-vram.md](reports/summaries/qwen36-27b-awq-vllm-ctx262k-kv-vram.md).
 
 ## Recommended Route
 
@@ -113,24 +133,23 @@ serving usable; it is not the final multi-prefill performance design.
 
 TurboQuant KV is useful, but not yet the default route.
 
-Validated rows from the 2026-05-21 experiment tree:
+Validated quality rows from the 2026-05-21 experiment tree:
 
-| KV dtype | Estimated 256K KV footprint | Ragent6 Walltime | Ragent6 Result | Notes |
+| KV dtype | 262K probe KV cache | Ragent6 Walltime | Ragent6 Result | Notes |
 | --- | ---: | ---: | ---: | --- |
-| `turboquant_4bit_nc` | `~4.2 GiB` | `319s` | `75.4` | Best practical TurboQuant result so far |
-| `turboquant_k8v4` | `~5.7 GiB` | `315s` | `63.0` | Stable only at shorter context in this run |
-| `int8_per_token_head` | `~6.3 GiB` | `296s` | `70.0` | Highest observed vLLM KV capacity in this build |
-| `float16` | `~10.5 GiB` | `487s` | `74.8` | Slowest Ragent6 walltime |
+| `turboquant_4bit_nc` | `735,084 tok` | `319s` | `75.4` | Largest real 262K-probe cache |
+| `turboquant_k8v4` | `520,461 tok` | `315s` | `63.0` | Stable only at shorter full60 context in this run |
+| `int8_per_token_head` | `518,397 tok` | `296s` | `70.0` | Nearly identical to k8v4 in the 262K probe |
+| `float16` | `272,938 tok` | `487s` | `74.8` | FP16 can still create a 262K cache |
 
-Important caveat: the TurboQuant rows reported only `0.93 GiB` available vLLM KV
-memory after engine initialization, lower than native INT8/FP16 rows in the same
-experiment tree. Treat theoretical KV compression and current vLLM allocator
-capacity as separate questions. The 256K KV footprints above are extrapolated
-from vLLM cache-size logs, not validated 256K serving results.
+Important caveat: the 262K probe validates startup, KV cache allocation, and
+VRAM use. It does not replace full long-prompt throughput or quality testing.
+The Ragent6 rows above remain the quality/stability evidence.
 
 Details:
 
 - [engines/vllm/recipes/qwen36-27b-awq-turboquant-kv.md](engines/vllm/recipes/qwen36-27b-awq-turboquant-kv.md)
+- [reports/summaries/qwen36-27b-awq-vllm-ctx262k-kv-vram.md](reports/summaries/qwen36-27b-awq-vllm-ctx262k-kv-vram.md)
 - [reports/summaries/qwen36-27b-awq-vllm-turboquant-kv.md](reports/summaries/qwen36-27b-awq-vllm-turboquant-kv.md)
 - [manifests/dual-2080ti-vllm-qwen27-awq-turboquant-kv.lock](manifests/dual-2080ti-vllm-qwen27-awq-turboquant-kv.lock)
 - [manifests/dual-2080ti-vllm-qwen27-awq-turboquant-overlay.lock](manifests/dual-2080ti-vllm-qwen27-awq-turboquant-overlay.lock)

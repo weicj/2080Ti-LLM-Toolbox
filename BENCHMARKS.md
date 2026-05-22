@@ -116,11 +116,31 @@ quality, and stability.
 Observed stability for all four rows: no `OutOfMemoryError`, `EngineDeadError`,
 HTTP 500, traceback, or connection reset was found in the matching server logs.
 
-Important resource caveat: in this experiment tree, the TurboQuant rows reported
-only `0.93 GiB` available for vLLM KV cache after engine initialization, so their
-measured cache capacity is lower than native INT8/FP16 rows. That is current
-allocator/runtime behavior, not the theoretical compression ratio of the KV
-format.
+Important resource caveat: in this full60 `gpu_memory_utilization=0.90` run,
+the TurboQuant rows reported only `0.93 GiB` available for vLLM KV cache after
+engine initialization, so their measured cache capacity is lower than native
+INT8/FP16 rows. Use the 262K startup/cache probe below for the long-context
+capacity claim.
+
+### KV dtype comparison: 262K startup/cache probe
+
+This table is a capacity probe, not a throughput benchmark. It uses
+`max_model_len=262144`, `gpu_memory_utilization=0.98`, `max_num_seqs=1`,
+`max_num_batched_tokens=4096`, eager mode, no async scheduling, MTP K=3, and the
+same dual 22GB 2080 Ti TP=2 vLLM experiment tree.
+
+| KV dtype | Startup | vLLM reported KV cache | Max concurrency at 262,144 | Total used VRAM / 2080 Ti | Notes |
+| --- | --- | ---: | ---: | ---: | --- |
+| `turboquant_4bit_nc` | READY | `735,084 tok` | `2.80x` | `20,595 MiB` | Largest measured cache |
+| `turboquant_k8v4` | READY | `520,461 tok` | `1.99x` | `20,615 MiB` | Same band as native INT8 |
+| `int8_per_token_head` | READY | `518,397 tok` | `1.98x` | `20,633 MiB` | Native INT8 KV |
+| `auto` / FP16 | READY | `272,938 tok` | `1.04x` | `20,633 MiB` | FP16 can create a 262K cache |
+
+This replaces earlier 250K/256K footprint estimates for capacity claims. The
+VRAM column is total `nvidia-smi` device memory after startup, including
+weights, runtime/workspace, and KV cache; it is not KV-only footprint. The probe
+validates startup, KV cache allocation, and VRAM use, not full 262K long-prompt
+throughput or quality.
 
 ## Multi-Concurrency Serving
 

@@ -40,9 +40,13 @@ TurboQuant KV status:
   TurboQuant prefill through FlashInfer/FA2.
 - The code-level fix that mattered was passing `sm_scale=self.scale` into the
   TurboQuant FlashInfer ragged prefill plan.
-- Current allocator behavior in the experiment tree leaves much less
-  vLLM-reported available KV memory for TurboQuant rows than native INT8/FP16
-  rows. Treat this as validated compatibility, not final resource efficiency.
+- A `max_model_len=262144` startup/cache probe succeeded for FP16, native INT8,
+  `turboquant_k8v4`, and `turboquant_4bit_nc`. The largest measured row was
+  `turboquant_4bit_nc` with `735,084` vLLM-reported KV tokens at about
+  `20.6 GiB` total used VRAM per 2080 Ti.
+- Treat the 262K probe as startup/cache/VRAM evidence, not full long-prompt
+  throughput validation. The VRAM number is total device memory, not KV-only
+  footprint.
 
 See:
 
@@ -51,5 +55,6 @@ See:
 - [models/qwen3.6-27b-awq/vllm-mtp-k3.md](../../models/qwen3.6-27b-awq/vllm-mtp-k3.md)
 - [models/qwen3.6-27b-awq/vllm-turboquant-kv.md](../../models/qwen3.6-27b-awq/vllm-turboquant-kv.md)
 - [reports/summaries/qwen36-27b-awq-vllm-gdn-concurrency.md](../../reports/summaries/qwen36-27b-awq-vllm-gdn-concurrency.md)
+- [reports/summaries/qwen36-27b-awq-vllm-ctx262k-kv-vram.md](../../reports/summaries/qwen36-27b-awq-vllm-ctx262k-kv-vram.md)
 - [reports/summaries/qwen36-27b-awq-vllm-turboquant-kv.md](../../reports/summaries/qwen36-27b-awq-vllm-turboquant-kv.md)
 - [BENCHMARKS.md](../../BENCHMARKS.md)

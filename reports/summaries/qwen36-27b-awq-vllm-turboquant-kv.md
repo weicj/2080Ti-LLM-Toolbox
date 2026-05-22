@@ -22,23 +22,30 @@ route and passing `sm_scale` into the TurboQuant ragged prefill plan. Earlier
 bad runs produced repeated special-token and garbage output; the validated
 full60 runs did not.
 
-Resource caveat:
+Full60 resource caveat:
 
 The TurboQuant rows are validated for quality and stability, but not yet for
-final resource efficiency. In this experiment tree, vLLM reported only
-`0.93 GiB` available KV memory for both TurboQuant rows, compared with
-`7.47 GiB` for the native INT8 and FP16 rows. This makes measured cache capacity
-lower than native INT8/FP16 even though the KV format is compressed.
+final resource efficiency. In the 2026-05-21 full60 `gpu_memory_utilization=0.90`
+rows, vLLM reported only `0.93 GiB` available KV memory for both TurboQuant
+rows, compared with `7.47 GiB` for the native INT8 and FP16 rows. That specific
+quality-run capacity snapshot should not be used as the final long-context
+capacity claim; use the 262K probe below for that.
 
-250K allocator-derived extrapolation:
+262K startup/cache probe:
 
-- `turboquant_4bit_nc`: about `4.0 GiB` KV footprint at 250K.
-- `turboquant_k8v4`: about `5.4 GiB` KV footprint at 250K.
-- `int8_per_token_head`: about `6.0 GiB` KV footprint at 250K.
-- `float16`: about `10.0 GiB` KV footprint at 250K.
+- `turboquant_4bit_nc`: READY, vLLM KV cache `735,084 tokens`,
+  `20,595 MiB` total used VRAM per 2080 Ti.
+- `turboquant_k8v4`: READY, vLLM KV cache `520,461 tokens`,
+  `20,615 MiB` total used VRAM per 2080 Ti.
+- `int8_per_token_head`: READY, vLLM KV cache `518,397 tokens`,
+  `20,633 MiB` total used VRAM per 2080 Ti.
+- `auto` / FP16: READY, vLLM KV cache `272,938 tokens`,
+  `20,633 MiB` total used VRAM per 2080 Ti.
 
-This is a slope comparison derived from current vLLM cache-size logs, not a
-validated 250K serving result.
+This is a real `max_model_len=262144` startup/cache/VRAM probe, not an
+extrapolated footprint estimate. The VRAM numbers are total device memory after
+startup, not KV-only footprint. It validates cache creation at 262K; it does not
+by itself measure full 262K long-prompt throughput or quality.
 
 Interpretation:
 

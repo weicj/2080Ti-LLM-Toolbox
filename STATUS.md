@@ -38,9 +38,12 @@ Why:
   weighted `75.4`, invalid `0`, `max_model_len=43680`.
 - `tqk8v4` completed full60 at `315s`, weighted `63.0`, invalid `0`, but needed
   `max_model_len=35840` in this run.
-- Current experiment-tree resource behavior is not yet ideal: vLLM reported
-  only `0.93 GiB` available KV memory for both TurboQuant rows, giving lower
-  cache capacity than native INT8/FP16 rows despite the compressed KV format.
+- A later `max_model_len=262144` startup/cache probe succeeded for all four KV
+  rows. The largest measured cache was `turboquant_4bit_nc` at `735,084`
+  reported KV tokens, followed by `turboquant_k8v4` at `520,461`, native INT8
+  at `518,397`, and FP16 at `272,938`.
+- The 262K probe validates startup, KV cache allocation, and VRAM use; it is not
+  full 262K long-prompt throughput or quality validation.
 
 ## Experimental
 

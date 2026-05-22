@@ -56,29 +56,30 @@ Interpretation:
   time.
 - `turboquant_k8v4` is stable but lower quality in this run and required a
   shorter `max_model_len=35840`.
-- Native `int8_per_token_head` still had the best measured vLLM KV capacity in
-  this experiment tree. TurboQuant compression is therefore not yet equivalent
-  to better runtime capacity on SM75; allocator/workspace behavior still needs
-  work.
+- In the full60 `gpu_memory_utilization=0.90` rows, native
+  `int8_per_token_head` had the best reported vLLM KV capacity. The later 262K
+  startup/cache probe below uses a more aggressive capacity setting and shows
+  the expected TurboQuant capacity advantage.
 
-## 250K KV footprint estimate
+## 262K startup/cache probe
 
-The table below is an allocator-derived estimate from the vLLM log lines
-`Available KV cache memory` and `GPU KV cache size`. It is useful for comparing
-resource slopes, but it is not proof that the current build can serve 250K in
-that configuration.
+This later probe uses `max_model_len=262144`, `gpu_memory_utilization=0.98`,
+`max_num_seqs=1`, `max_num_batched_tokens=4096`, eager mode, no async
+scheduling, and MTP K=3. It validates startup, KV cache allocation, and VRAM
+use, not full 262K long-prompt throughput.
 
-| KV dtype | Log-derived bytes/token slope | Extrapolated KV footprint at 250K |
-| --- | ---: | ---: |
-| `turboquant_4bit_nc` | `~17 KiB/token` | `~4.0 GiB` |
-| `turboquant_k8v4` | `~22 KiB/token` | `~5.4 GiB` |
-| `int8_per_token_head` | `~25 KiB/token` | `~6.0 GiB` |
-| `float16` | `~42 KiB/token` | `~10.0 GiB` |
+| KV dtype | Startup | vLLM reported KV cache | Max concurrency at 262,144 | Total used VRAM / 2080 Ti |
+| --- | --- | ---: | ---: | ---: |
+| `turboquant_4bit_nc` | READY | `735,084 tok` | `2.80x` | `20,595 MiB` |
+| `turboquant_k8v4` | READY | `520,461 tok` | `1.99x` | `20,615 MiB` |
+| `int8_per_token_head` | READY | `518,397 tok` | `1.98x` | `20,633 MiB` |
+| `auto` / FP16 | READY | `272,938 tok` | `1.04x` | `20,633 MiB` |
 
-The resource problem in this run was not the per-token slope alone. The
-TurboQuant rows had much less vLLM-reported available KV memory after engine
-initialization (`0.93 GiB`) than INT8/FP16 (`7.47 GiB`), which capped actual
-cache size well below the extrapolated 250K target.
+This replaces the earlier allocator-derived 250K/256K footprint estimates for
+capacity claims. The VRAM column is total device memory after startup, including
+weights, runtime/workspace, and KV cache; it is not KV-only footprint. The
+biggest real startup/cache result is `turboquant_4bit_nc` at `735,084`
+reported KV tokens.
 
 Evidence run IDs:
 
@@ -86,5 +87,12 @@ Evidence run IDs:
 - `run-20260521-161010-tqk8v4-fa2pure-eager-noasync-full-mb4096-u090-35840-expseg`
 - `run-20260521-163518-awq-mtp3-int8-full-mb4096-u090`
 - `run-20260521-164520-awq-mtp3-fp16-full-mb4096-u090`
+
+262K probe remote logs:
+
+- FP16: `/data/experiments/vllm-qwen27-awq-sm75-fa-turing-prefill-20260520/vllm-qwen27_ctx262k_fp16_161132-20260522-081144.log`
+- INT8: `/data/experiments/vllm-qwen27-awq-sm75-fa-turing-prefill-20260520/vllm-qwen27_ctx262k_int8_161541-20260522-081553.log`
+- K8V4: `/data/experiments/vllm-qwen27-awq-sm75-fa-turing-prefill-20260520/vllm-qwen27_ctx262k_k8v4_161834-20260522-081846.log`
+- TQ4NC: `/data/experiments/vllm-qwen27-awq-sm75-fa-turing-prefill-20260520/vllm-qwen27_ctx262k_k4v4_162222-20260522-082235.log`
 
 Provenance: copied from private lab logs dated 2026-05-21.
