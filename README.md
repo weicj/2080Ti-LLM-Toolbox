@@ -40,6 +40,8 @@ weights, runtime/workspace, and KV cache. It is not KV-only footprint. This is a
 startup/cache/VRAM probe, not a full 262K long-prompt throughput benchmark.
 Details:
 [reports/summaries/qwen36-27b-awq-vllm-ctx262k-kv-vram.md](reports/summaries/qwen36-27b-awq-vllm-ctx262k-kv-vram.md).
+TurboQuant quality/stability details:
+[reports/summaries/qwen36-27b-awq-vllm-turboquant-kv.md](reports/summaries/qwen36-27b-awq-vllm-turboquant-kv.md).
 
 ## Recommended Route
 
@@ -128,31 +130,6 @@ Patch:
 
 This is a compatibility loop, not a fused ragged GDN kernel. It makes real
 serving usable; it is not the final multi-prefill performance design.
-
-## TurboQuant KV Status
-
-TurboQuant KV is useful, but not yet the default route.
-
-Validated quality rows from the 2026-05-21 experiment tree:
-
-| KV dtype | 262K probe KV cache | Ragent6 Walltime | Ragent6 Result | Notes |
-| --- | ---: | ---: | ---: | --- |
-| `turboquant_4bit_nc` | `735,084 tok` | `319s` | `75.4` | Largest real 262K-probe cache |
-| `turboquant_k8v4` | `520,461 tok` | `315s` | `63.0` | Stable only at shorter full60 context in this run |
-| `int8_per_token_head` | `518,397 tok` | `296s` | `70.0` | Nearly identical to k8v4 in the 262K probe |
-| `float16` | `272,938 tok` | `487s` | `74.8` | FP16 can still create a 262K cache |
-
-Important caveat: the 262K probe validates startup, KV cache allocation, and
-VRAM use. It does not replace full long-prompt throughput or quality testing.
-The Ragent6 rows above remain the quality/stability evidence.
-
-Details:
-
-- [engines/vllm/recipes/qwen36-27b-awq-turboquant-kv.md](engines/vllm/recipes/qwen36-27b-awq-turboquant-kv.md)
-- [reports/summaries/qwen36-27b-awq-vllm-ctx262k-kv-vram.md](reports/summaries/qwen36-27b-awq-vllm-ctx262k-kv-vram.md)
-- [reports/summaries/qwen36-27b-awq-vllm-turboquant-kv.md](reports/summaries/qwen36-27b-awq-vllm-turboquant-kv.md)
-- [manifests/dual-2080ti-vllm-qwen27-awq-turboquant-kv.lock](manifests/dual-2080ti-vllm-qwen27-awq-turboquant-kv.lock)
-- [manifests/dual-2080ti-vllm-qwen27-awq-turboquant-overlay.lock](manifests/dual-2080ti-vllm-qwen27-awq-turboquant-overlay.lock)
 
 ## Baselines And Rejected Paths
 
