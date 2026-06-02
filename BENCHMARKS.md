@@ -17,6 +17,13 @@ modified RTX 2080 Ti 22GB unless noted otherwise.
 Only Qwen3.6 27B-family artifacts are listed in the main benchmark tables.
 Derivative model lines and non-27B routes are excluded from this scorecard.
 
+Retirement note: `QuantTrio-Qwen3.6-27B-AWQ` is a historical original-AWQ
+baseline. Its resident lab weights were deleted on 2026-05-30 after Qwopus
+AWQ replaced it as the quality lane and Heretic GPTQ became the low-refusal
+lane. The rows below are retained for regression archaeology and have not been
+rerun on the final 2026-05-30 repaired stable build for
+`TQ4NC + MTP3 + no-eager/CUDAGraph`.
+
 | Artifact | Engine Route | Size / Quantization | MTP / Draft Status |
 | --- | --- | --- | --- |
 | `QuantTrio-Qwen3.6-27B-AWQ` | vLLM / SGLang | 21.9 GB safetensors, AWQ 4-bit, group size 128, zero point enabled | MTP tensors present; vLLM validated with AWQ Marlin K=1..4 |
@@ -36,6 +43,21 @@ Derivative model lines and non-27B routes are excluded from this scorecard.
 | vLLM | MTP K=3 peak repeat | Qwen3.6-27B-AWQ | `1841.7 tok/s` | `101.3 tok/s` | `3.5s` | Current peak 4K result; max decode `101.5 tok/s` |
 | vLLM | MTP K=4 | Qwen3.6-27B-AWQ | `1856.0 tok/s` | `72.0 tok/s` | `4.0s` | Fourth token acceptance regressed |
 | llama.cpp | upstream-original GGUF baseline | Qwen3.6-27B-Q4_K_M | `553.4 tok/s` | `23.7 tok/s` | `12.8s` | Single 2080 Ti, `cache_prompt=false` |
+
+### LongGen3 4096 / 1024 Warm Sweep
+
+This workload uses three Chinese long-output tasks and excludes service startup,
+model loading, AOT/CUDAGraph capture, and first-request JIT. It is a better
+signal for realistic long generation than the synthetic PP4096/TG128 repeat.
+
+| Engine | Route | Model | Prefill | Decode | E2E | Notes |
+| --- | --- | --- | ---: | ---: | ---: | --- |
+| vLLM | noMTP | Qwopus/Qwen3.6-27B-AWQ | `103.30 tok/s` | `32.26 tok/s` | `95.217s` | 9836 prompt / 3072 completion tokens |
+| vLLM | MTP K=3 | Qwopus/Qwen3.6-27B-AWQ | `173.34 tok/s` | `54.14 tok/s` | `56.743s` | Conservative deployment point |
+| vLLM | MTP K=5 | Qwopus/Qwen3.6-27B-AWQ | `176.73 tok/s` | `55.20 tok/s` | `55.654s` | Numeric best in this sweep |
+
+Gemma4 31B GPTQ is tracked as a secondary route in
+[reports/summaries/qwen-gemma-vllm-longgen3-mtp-sweep.md](reports/summaries/qwen-gemma-vllm-longgen3-mtp-sweep.md), not in the main Qwen-family scorecard.
 
 ### PP64K / TG512
 
@@ -141,6 +163,16 @@ VRAM column is total `nvidia-smi` device memory after startup, including
 weights, runtime/workspace, and KV cache; it is not KV-only footprint. The probe
 validates startup, KV cache allocation, and VRAM use, not full 262K long-prompt
 throughput or quality.
+
+### Real PP262000 / TG1 prompt gates
+
+These rows prove actual near-full native-context requests, not just startup.
+They generate only one token, so decode is shown only as a sanity note.
+
+| Engine | Route | Model | Prefill | Decode | E2E | Notes |
+| --- | --- | --- | ---: | ---: | ---: | --- |
+| vLLM | FP16/default KV, noMTP | QuantTrio Qwen3.6-27B-AWQ | `785.26 tok/s` | one-token only | `333.646s` | HTTP 200, `prompt_tokens=262000` |
+| vLLM | TQ4NC KV, noMTP | Qwopus/Qwen3.6-27B-AWQ | `783.09 tok/s` | one-token only | `334.586s` | HTTP 200, `prompt_tokens=262000`; requires full-context continuation workspace reserve |
 
 ## Multi-Concurrency Serving
 

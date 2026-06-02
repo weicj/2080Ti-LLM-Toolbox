@@ -48,6 +48,19 @@ TurboQuant KV status:
   throughput validation. The VRAM number is total device memory, not KV-only
   footprint.
 
+Gemma4/Gemma31B note:
+
+- The Qwen27 TurboQuant performance route was not lost. The later Gemma4/Gemma31B
+  `tq4nc` prefill regression was a separate `head_dim=512` final full-attention
+  issue.
+- The fixed Gemma4 no-MTP route pairs
+  `GEMMA4_TQ4NC_HEAD512_PREFILL_SDPA_FALLBACK=1` with
+  `GEMMA4_SM75_SDPA_PREFILL512=1`. PP4096/TG128 recovered from old tq4nc median
+  `1248.70 prefill / 32.98 decode tok/s` to `1646.56 / 33.23`, or
+  `97.2% / 98.4%` of the same-build non-TQ baseline.
+- This is an SDPA/Torch compatibility fallback, not yet a true SM75
+  FlashInfer/FA2 head512 kernel.
+
 See:
 
 - [engines/vllm/recipes/qwen36-27b-awq-best-sm75.md](recipes/qwen36-27b-awq-best-sm75.md)
@@ -57,4 +70,5 @@ See:
 - [reports/summaries/qwen36-27b-awq-vllm-gdn-concurrency.md](../../reports/summaries/qwen36-27b-awq-vllm-gdn-concurrency.md)
 - [reports/summaries/qwen36-27b-awq-vllm-ctx262k-kv-vram.md](../../reports/summaries/qwen36-27b-awq-vllm-ctx262k-kv-vram.md)
 - [reports/summaries/qwen36-27b-awq-vllm-turboquant-kv.md](../../reports/summaries/qwen36-27b-awq-vllm-turboquant-kv.md)
+- [reports/summaries/gemma4-31b-gptq-vllm-tq4nc-prefill-fix.md](../../reports/summaries/gemma4-31b-gptq-vllm-tq4nc-prefill-fix.md)
 - [BENCHMARKS.md](../../BENCHMARKS.md)

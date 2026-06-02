@@ -7,6 +7,8 @@
 - [Qwen3.6-27B-AWQ vLLM GDN Concurrency](summaries/qwen36-27b-awq-vllm-gdn-concurrency.md)
 - [Qwen3.6-27B-AWQ vLLM 262K KV/VRAM Probe](summaries/qwen36-27b-awq-vllm-ctx262k-kv-vram.md)
 - [Qwen3.6-27B-AWQ vLLM TurboQuant KV](summaries/qwen36-27b-awq-vllm-turboquant-kv.md)
+- [Qwen/Gemma vLLM LongGen3 MTP Sweep](summaries/qwen-gemma-vllm-longgen3-mtp-sweep.md)
+- [Gemma4 31B GPTQ vLLM tq4nc Prefill Fix](summaries/gemma4-31b-gptq-vllm-tq4nc-prefill-fix.md)
 - [Qwen3.6-35B-A3B-AWQ vLLM High Throughput, Rejected](summaries/qwen36-35b-a3b-awq-vllm-peak-rejected.md)
 
 ## Provenance

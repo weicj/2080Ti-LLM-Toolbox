@@ -26,7 +26,8 @@ The speed columns use the PP4096/TG128 repeat. The max-cache column is the
 ## Long-Context Capacity
 
 The same dual 22GB 2080 Ti rig can create a real `max_model_len=262144` vLLM
-cache. The most aggressive measured row is TurboQuant `4bit_nc`:
+cache and can complete real near-full-context requests. The most aggressive
+measured cache row is TurboQuant `4bit_nc`:
 
 | KV dtype | vLLM reported KV cache | Total used VRAM / 2080 Ti |
 | --- | ---: | ---: |
@@ -36,8 +37,15 @@ cache. The most aggressive measured row is TurboQuant `4bit_nc`:
 | `auto` / FP16 | `272,938 tok` | `20,633 MiB` |
 
 The VRAM column is total `nvidia-smi` device memory after startup, including
-weights, runtime/workspace, and KV cache. It is not KV-only footprint. This is a
-startup/cache/VRAM probe, not a full 262K long-prompt throughput benchmark.
+weights, runtime/workspace, and KV cache. It is not KV-only footprint.
+
+Real prompt gates also passed:
+
+| Route | Request | Prefill | Result |
+| --- | --- | ---: | --- |
+| FP16/default KV, noMTP, original AWQ baseline | PP262000/TG1 | `785.26 tok/s` | HTTP 200 |
+| TQ4NC KV, noMTP, current Qwopus quality lane | PP262000/TG1 | `783.09 tok/s` | HTTP 200 |
+
 Details:
 [reports/summaries/qwen36-27b-awq-vllm-ctx262k-kv-vram.md](reports/summaries/qwen36-27b-awq-vllm-ctx262k-kv-vram.md).
 TurboQuant quality/stability details:
@@ -107,6 +115,8 @@ The vLLM path has real performance, quality, and stability evidence:
 - PP64K/TG512: `1294.3 tok/s` prefill, `55.3 tok/s` decode.
 - Sequential 60-request Ragent6 run: `167.4s` wall, average
   `700.9 tok/s` prefill and `35.2 tok/s` generation.
+- LongGen3 4096/1024 warm sweep: Qwopus MTP improves decode from
+  `32.26 tok/s` noMTP to `54.14 tok/s` at MTP K=3 and `55.20 tok/s` at K=5.
 - Concurrent serving validated up to `max_num_seqs=4` after the FlashQLA legacy
   GDN multi-prefill patch.
 - Ragent6 1/2/4-way shard checks completed without GDN errors, HTTP 500s, or
@@ -114,6 +124,12 @@ The vLLM path has real performance, quality, and stability evidence:
 
 The highest-quality detailed tables live in [BENCHMARKS.md](BENCHMARKS.md).
 Curated run summaries live under [reports/summaries](reports/summaries/).
+
+Gemma4 31B GPTQ is also viable as a secondary route: FP16/default KV with
+assistant MTP5 reached a warm PP4096/TG128 peak of `1655.65 tok/s` prefill and
+`99.64 tok/s` decode on the same dual-card vLLM runtime. Its compressed-KV
+routes are more limited than Qwen's, so Gemma remains a secondary/experimental
+profile rather than the main toolbox route.
 
 ## Required vLLM Patch
 

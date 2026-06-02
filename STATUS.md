@@ -16,6 +16,9 @@ Why:
   prefill and `101.3 tok/s` median decode, with max decode `101.5 tok/s`.
 - A sequential 60-request real serving run completed in `167.4s`.
 - Average prefill/generation throughput in that run was `700.9/35.2 tok/s`.
+- The LongGen3 4096/1024 warm sweep shows real long-output MTP gains:
+  noMTP `103.30/32.26 tok/s`, MTP K=3 `173.34/54.14 tok/s`, and MTP K=5
+  `176.73/55.20 tok/s` for prefill/decode.
 - The updated vLLM build has validated `max_num_seqs=4` concurrent serving
   after the FlashQLA legacy GDN multi-prefill fix.
 - Ragent6 1/2/4-way concurrent shard runs completed without GDN errors or HTTP
@@ -42,8 +45,25 @@ Why:
   rows. The largest measured cache was `turboquant_4bit_nc` at `735,084`
   reported KV tokens, followed by `turboquant_k8v4` at `520,461`, native INT8
   at `518,397`, and FP16 at `272,938`.
-- The 262K probe validates startup, KV cache allocation, and VRAM use; it is not
-  full 262K long-prompt throughput or quality validation.
+- The TQ4NC route also passed a real near-full native-context prompt gate:
+  `PP262000/TG1` completed at `783.09 tok/s` prefill. A separate FP16/default
+  KV original-AWQ baseline completed the same gate at `785.26 tok/s`.
+
+### Gemma4 31B GPTQ + vLLM
+
+Status: secondary experimental route.
+
+Why:
+
+- FP16/default KV + assistant MTP5 reached a warm PP4096/TG128 peak of
+  `1655.65 tok/s` prefill and `99.64 tok/s` decode.
+- On the LongGen3 4096/1024 warm sweep, Gemma improved from
+  `106.68/30.67 tok/s` noMTP to `131.86/37.68 tok/s` at MTP K=7.
+- The fixed TQ4NC no-MTP route recovered PP4096/TG128 parity with the same-build
+  non-TQ baseline: `1646.56/33.23 tok/s`, or `97.2%/98.4%`.
+- Compressed-KV + MTP is still not a Gemma speed route. TQ4NC + MTP5 can start,
+  but the measured row was only `1660.13/11.66 tok/s` because speculative
+  chunking was ineffective.
 
 ## Experimental
 

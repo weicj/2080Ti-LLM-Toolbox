@@ -39,5 +39,14 @@ The required behavior for the validated run is documented in
 FlashInfer/FA2 where available, use the model attention scale, and SDPA must
 remain a diagnostic fallback rather than the final route.
 
+Gemma4/Gemma31B is the exception that proves the boundary: its
+`head_dim=512` no-MTP `tq4nc` route needed an SDPA compatibility fallback to
+avoid a final full-attention `kernel_unified_attention` slow path on SM75. The
+recorded fix pairs `GEMMA4_TQ4NC_HEAD512_PREFILL_SDPA_FALLBACK=1` with
+`GEMMA4_SM75_SDPA_PREFILL512=1`, recovering PP4096/TG128 to
+`1646.56 prefill / 33.23 decode tok/s`, or `97.2% / 98.4%` of the same-build
+non-TQ baseline. See
+`../../../reports/summaries/gemma4-31b-gptq-vllm-tq4nc-prefill-fix.md`.
+
 The file-level overlay inventory is pinned in
 `../../../manifests/dual-2080ti-vllm-qwen27-awq-turboquant-overlay.lock`.

@@ -1,4 +1,4 @@
-# Qwen3.6-27B-AWQ vLLM 262K KV/VRAM Probe
+# Qwen3.6-27B-AWQ vLLM 262K KV/VRAM and Real-Prompt Probe
 
 Hardware: dual modified RTX 2080 Ti 22GB, NVLink, TP=2.
 
@@ -36,14 +36,41 @@ capacity as native INT8 in this startup probe, while `turboquant_4bit_nc` is
 the largest measured row at `735,084` tokens.
 
 This validates engine startup, KV cache allocation, and VRAM use at
-`max_model_len=262144`. It does not by itself measure full 262K long-prompt
-throughput or quality.
+`max_model_len=262144`. The startup/cache table does not by itself measure full
+262K long-prompt throughput or quality; the real-prompt gates below are the
+stronger evidence for actual native-context serving.
 
-Remote log pointers:
+## Real 262K Prompt Gates
 
-- FP16: `/data/experiments/vllm-qwen27-awq-sm75-fa-turing-prefill-20260520/vllm-qwen27_ctx262k_fp16_161132-20260522-081144.log`
-- INT8: `/data/experiments/vllm-qwen27-awq-sm75-fa-turing-prefill-20260520/vllm-qwen27_ctx262k_int8_161541-20260522-081553.log`
-- K8V4: `/data/experiments/vllm-qwen27-awq-sm75-fa-turing-prefill-20260520/vllm-qwen27_ctx262k_k8v4_161834-20260522-081846.log`
-- TQ4NC: `/data/experiments/vllm-qwen27-awq-sm75-fa-turing-prefill-20260520/vllm-qwen27_ctx262k_k4v4_162222-20260522-082235.log`
+These rows used real requests with `prompt_tokens=262000`, not only engine
+startup. They are single-request gates with one generated token, so decode is
+not a meaningful throughput signal except as a basic completion sanity check.
 
-Provenance: copied from private lab logs dated 2026-05-22.
+| Route | Model | KV dtype | MTP | Request | Prefill | Decode note | Result |
+| --- | --- | --- | --- | --- | ---: | --- | --- |
+| original AWQ baseline | `QuantTrio-Qwen3.6-27B-AWQ` | FP16/default | off | PP262000/TG1 | `785.26 tok/s` | one-token decode only | HTTP 200 |
+| current Qwen quality lane | `mconcat/Qwopus3.6-27B-v2-AWQ-4bit` | `turboquant_4bit_nc` | off | PP262000/TG1 | `783.09 tok/s` | one-token decode only | HTTP 200 |
+
+The Qwopus TQ4NC gate required the continuation workspace reserve to cover the
+full native context. Smaller reserves passed shorter prompts but failed near
+262K after the workspace was locked. A separate two-request gate with
+`gpu_memory_utilization=0.88`, `max_num_seqs=2`, and the same 262K reserve
+completed two PP262000/TG1 requests in one server run, but logs showed the
+prefills were serialized; that proves queued capacity, not parallel long-prefill
+throughput.
+
+Private lab artifact labels:
+
+- FP16: `qwen27_ctx262k_fp16_20260522`
+- INT8: `qwen27_ctx262k_int8_20260522`
+- K8V4: `qwen27_ctx262k_k8v4_20260522`
+- TQ4NC: `qwen27_ctx262k_tq4nc_20260522`
+
+Real-prompt result pointers:
+
+- QuantTrio FP16/default KV: `quanttrio_fp16_nomtp_pp262000_tg1_20260602`
+- Qwopus TQ4NC: `qwen_tq4nc_nomtp_ctx262k_longprompt_gate_1780285496`
+- Qwopus TQ4NC two-request gate:
+  `qwen_tq4nc_nomtp_ctx262k_longprompt_gate_1780287143`
+
+Provenance: copied from private lab logs dated 2026-05-22 through 2026-06-02.
