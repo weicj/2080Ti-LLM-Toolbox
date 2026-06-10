@@ -1,5 +1,10 @@
 # vLLM on RTX 2080 Ti / SM75
 
+Packaged runtime:
+[weicj/vLLM-2080Ti-Definitive](https://github.com/weicj/vLLM-2080Ti-Definitive)
+is the maintained 2080 Ti Definitive vLLM runtime for the SM75 patches,
+launcher, profiles, and documentation referenced by this toolbox.
+
 Current best tested path:
 
 - vLLM 0.21

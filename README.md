@@ -65,6 +65,11 @@ FlashQLA SM70/SM75 legacy GDN prefill
 MTP K=3
 ```
 
+Packaged runtime:
+[weicj/vLLM-2080Ti-Definitive](https://github.com/weicj/vLLM-2080Ti-Definitive)
+is the maintained 2080 Ti Definitive vLLM runtime that packages the current
+SM75 patches, launcher, profiles, and documentation for this route.
+
 Use these first when reproducing the peak result or comparing other engines /
 KV experiments:
 
